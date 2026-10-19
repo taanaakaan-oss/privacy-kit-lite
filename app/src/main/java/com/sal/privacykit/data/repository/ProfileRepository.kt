@@ -110,13 +110,15 @@ class ProfileRepository(
 
     fun observeAll(): Flow<List<Profile>> = dao.observeAll().map { list -> list.map { it.toDomain() } }
 
+    fun activeProfileIdGlobal(): Flow<Long?> = appPreferences.activeProfileGlobalId
+
     fun observeForApp(appId: String): Flow<List<Profile>> =
         dao.observeForApp(appId).map { list -> list.map { it.toDomain() } }
 
     fun observeById(id: Long): Flow<Profile?> = dao.observeById(id).map { it?.toDomain() }
 
     suspend fun activeOrFallbackProfile(appId: String): Profile? {
-        val activeId = appPreferences.activeProfileId(appId).first()
+        val activeId = appPreferences.activeProfileGlobalId.first()
         return selectActiveOrFallback(observeForApp(appId).first(), activeId)
     }
 
@@ -137,7 +139,8 @@ class ProfileRepository(
         )
         dao.update(dao.observeById(id).first()!!.copy(identifierValues = encodeValues(defaultValues(id, deviceTemplateId))))
         serviceConnection.requestScope(appId)
-        appPreferences.setActiveProfile(appId, id)
+        appPreferences.setActiveProfileGlobal(id)
+        appPreferences.registerApp(appId)
         syncExport()
         return id
     }
@@ -181,7 +184,8 @@ class ProfileRepository(
             ),
         )
         serviceConnection.requestScope(targetAppId)
-        appPreferences.setActiveProfile(targetAppId, id)
+        appPreferences.setActiveProfileGlobal(id)
+        appPreferences.registerApp(targetAppId)
         syncExport()
         return id
     }
@@ -248,7 +252,7 @@ class ProfileRepository(
     }
 
     suspend fun setActiveProfile(profile: Profile) {
-        appPreferences.setActiveProfile(profile.appId, profile.id)
+        appPreferences.setActiveProfileGlobal(profile.id)
         syncExport()
     }
 
@@ -364,9 +368,9 @@ class ProfileRepository(
 
     private suspend fun syncExport() {
         val profiles = observeAll().first()
-        val activeByApp = profiles.map { it.appId }.distinct().associateWith { appPreferences.activeProfileId(it).first() }
-            .mapNotNull { (appId, id) -> if (id != null) appId to id else null }.toMap()
+        val activeProfileId = appPreferences.activeProfileGlobalId.first()
+        val registeredAppIds = appPreferences.registeredAppIds.first() + profiles.map { it.appId }
         val customHooksJson = appPreferences.customHooksJson.first()
-        XposedConfigExporter.export(serviceConnection, profiles, activeByApp, customHooksJson)
+        XposedConfigExporter.export(serviceConnection, profiles, activeProfileId, registeredAppIds, customHooksJson)
     }
 }

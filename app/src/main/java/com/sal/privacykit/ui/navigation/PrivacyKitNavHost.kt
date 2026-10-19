@@ -132,8 +132,11 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
                 AddAppScreen(
                     onBack = { navController.popBackStack() },
                     onAppSelected = { packageName ->
-                        navController.popBackStack()
-                        navController.navigate(Routes.createProfile(packageName))
+                        scope.launch {
+                            application.container.appPreferences.registerApp(packageName)
+                            navController.popBackStack()
+                            navController.navigate(Routes.createProfile(packageName))
+                        }
                     },
                 )
             }

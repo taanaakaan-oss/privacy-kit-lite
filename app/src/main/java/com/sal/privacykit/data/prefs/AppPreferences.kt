@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import org.json.JSONArray
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -19,6 +20,8 @@ class AppPreferences(private val context: Context) {
         val HAS_SEEN_ONBOARDING = booleanPreferencesKey("has_seen_onboarding")
         val PROFILE_ORGANIZATION_ENABLED = booleanPreferencesKey("profile_organization_enabled")
         val CUSTOM_HOOKS_JSON = stringPreferencesKey("custom_hooks_json")
+        val ACTIVE_PROFILE_GLOBAL = stringPreferencesKey("active_profile_global")
+        val REGISTERED_APPS = stringPreferencesKey("registered_apps")
     }
 
     val themeMode: Flow<ThemeMode> = context.dataStore.data.map { prefs ->
@@ -35,6 +38,32 @@ class AppPreferences(private val context: Context) {
 
     suspend fun setActiveProfile(appId: String, profileId: Long) {
         context.dataStore.edit { it[Keys.activeProfileForApp(appId)] = profileId.toString() }
+    }
+
+    val activeProfileGlobalId: Flow<Long?> = context.dataStore.data.map { prefs ->
+        prefs[Keys.ACTIVE_PROFILE_GLOBAL]?.toLongOrNull()
+    }
+
+    suspend fun setActiveProfileGlobal(profileId: Long) {
+        context.dataStore.edit { it[Keys.ACTIVE_PROFILE_GLOBAL] = profileId.toString() }
+    }
+
+    val registeredAppIds: Flow<Set<String>> = context.dataStore.data.map { prefs ->
+        runCatching {
+            val array = JSONArray(prefs[Keys.REGISTERED_APPS] ?: "[]")
+            (0 until array.length()).mapNotNull { array.optString(it).takeIf(String::isNotBlank) }.toSet()
+        }.getOrDefault(emptySet())
+    }
+
+    suspend fun registerApp(appId: String) {
+        if (appId.isBlank()) return
+        context.dataStore.edit { prefs ->
+            val current = runCatching {
+                val array = JSONArray(prefs[Keys.REGISTERED_APPS] ?: "[]")
+                (0 until array.length()).mapNotNull { array.optString(it).takeIf(String::isNotBlank) }.toSet()
+            }.getOrDefault(emptySet())
+            prefs[Keys.REGISTERED_APPS] = JSONArray((current + appId).sorted()).toString()
+        }
     }
 
     val hasSeenOnboarding: Flow<Boolean> = context.dataStore.data.map { prefs ->

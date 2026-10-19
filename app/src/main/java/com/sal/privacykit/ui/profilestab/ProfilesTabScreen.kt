@@ -18,6 +18,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.sal.privacykit.PrivacyKitApplication
 import com.sal.privacykit.ui.components.DeviceIconBadge
+import com.sal.privacykit.data.model.DeviceTemplateCatalog
+import top.yukonga.miuix.kmp.basic.TextButton
 import com.sal.privacykit.ui.components.SearchField
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon
@@ -37,7 +39,8 @@ fun ProfilesTabScreen(
             initializer { ProfilesTabViewModel(application.container.profileRepository) }
         },
     )
-    val groups by viewModel.groups.collectAsState()
+    val profiles by viewModel.profiles.collectAsState()
+    val activeProfileId by viewModel.activeProfileId.collectAsState()
     val query by viewModel.query.collectAsState()
 
     Scaffold(
@@ -63,20 +66,22 @@ fun ProfilesTabScreen(
                     placeholder = "Search profiles",
                 )
             }
-            items(groups, key = { it.groupKey }) { group ->
-                val label = if (group.profileCount == 1) "1 App" else "${group.profileCount} Apps"
+            items(profiles, key = { it.id }) { profile ->
+                val template = DeviceTemplateCatalog.byId(profile.deviceTemplateId)
+                val isActive = activeProfileId == profile.id
                 BasicComponent(
-                    title = group.templateName,
-                    summary = label,
+                    title = profile.name,
+                    summary = profile.deviceLabel(template.name, template.manufacturer),
                     startAction = { DeviceIconBadge() },
                     endActions = {
+                        TextButton(text = if (isActive) "Active" else "Use", onClick = { viewModel.setActive(profile) })
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                             contentDescription = null,
                             tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
                         )
                     },
-                    onClick = { onGroupClick(group.representativeProfileId) },
+                    onClick = { onGroupClick(profile.id) },
                 )
             }
         }

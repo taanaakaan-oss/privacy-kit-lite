@@ -20,7 +20,7 @@ class AppContainer(context: Context) {
     val appResolver = AppResolver(context)
     val xposedServiceConnection = XposedServiceConnection()
     val profileRepository = ProfileRepository(database, xposedServiceConnection, appPreferences)
-    val appRepository = AppRepository(profileRepository, appResolver)
+    val appRepository = AppRepository(profileRepository, appResolver, appPreferences)
     val profileLauncher = ProfileLauncher(profileRepository)
 
     init {

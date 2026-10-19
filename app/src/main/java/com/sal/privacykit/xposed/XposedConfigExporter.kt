@@ -23,14 +23,17 @@ object XposedConfigExporter {
     fun export(
         serviceConnection: XposedServiceConnection,
         profiles: List<Profile>,
-        activeProfileByApp: Map<String, Long>,
+        activeProfileId: Long?,
+        registeredAppIds: Set<String>,
         customHooksJson: String = "[]",
     ) {
         val service = serviceConnection.service ?: return
         val root = JSONObject()
-        profiles.groupBy { it.appId }.forEach { (appId, appProfiles) ->
-            val profile = selectActiveOrFallback(appProfiles, activeProfileByApp[appId]) ?: return@forEach
-            root.put(appId, profileToJson(profile))
+        val activeProfile = selectActiveOrFallback(profiles, activeProfileId)
+        if (activeProfile != null) {
+            (registeredAppIds + profiles.map { it.appId }).forEach { appId ->
+                root.put(appId, profileToJson(activeProfile))
+            }
         }
         val customHooks = CustomHookValidator.parseValidatedArray(customHooksJson)
         root.put(KEY_GLOBAL_SETTINGS, JSONObject().put(KEY_CUSTOM_HOOKS, customHooks))

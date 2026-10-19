@@ -61,7 +61,7 @@ fun AppsScreen(onAppClick: (String) -> Unit, onAddApp: () -> Unit) {
                 )
             }
             items(apps, key = { it.app.id }) { entry ->
-                val label = if (entry.profileCount == 1) "1 Profile" else "${entry.profileCount} Profiles"
+                val label = "Registered app"
                 BasicComponent(
                     title = entry.app.name,
                     summary = label,
