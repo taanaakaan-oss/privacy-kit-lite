@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.combine
 data class AppWithProfileCount(
     val app: AppInfo,
     val profileCount: Int,
+    val enabled: Boolean,
 )
 
 class AppRepository(
@@ -16,13 +17,18 @@ class AppRepository(
     private val appResolver: AppResolver,
     private val appPreferences: AppPreferences,
 ) {
+    suspend fun setAppEnabled(appId: String, appName: String, enabled: Boolean) = appPreferences.setAppEnabled(appId, appName, enabled)
+
+    suspend fun registerApp(appId: String, appName: String) = appPreferences.registerApp(appId, appName)
+
     fun observeApps(): Flow<List<AppWithProfileCount>> =
-        combine(profileRepository.observeAll(), appPreferences.registeredAppIds) { profiles, registeredIds ->
-            val allAppIds = registeredIds + profiles.map { it.appId }
+        combine(profileRepository.observeAll(), appPreferences.registeredApps) { profiles, registeredApps ->
+            val allAppIds = registeredApps.keys + profiles.map { it.appId }
             allAppIds.map { appId ->
                 AppWithProfileCount(
                     app = appResolver.resolve(appId),
                     profileCount = profiles.count { it.appId == appId && !it.archived },
+                    enabled = registeredApps[appId]?.enabled ?: true,
                 )
             }.sortedBy { it.app.name.lowercase() }
         }

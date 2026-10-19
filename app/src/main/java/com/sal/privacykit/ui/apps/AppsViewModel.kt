@@ -2,6 +2,8 @@ package com.sal.privacykit.ui.apps
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 import com.sal.privacykit.data.repository.AppRepository
 import com.sal.privacykit.data.repository.AppWithProfileCount
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +26,16 @@ class AppsViewModel(appRepository: AppRepository) : ViewModel() {
             apps.filter { it.app.name.contains(query, ignoreCase = true) }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    init {
+        viewModelScope.launch {
+            apps.collect { entries -> entries.forEach { appRepository.registerApp(it.app.id, it.app.name) } }
+        }
+    }
+
+    fun setAppEnabled(entry: AppWithProfileCount, enabled: Boolean) {
+        viewModelScope.launch { appRepository.setAppEnabled(entry.app.id, entry.app.name, enabled) }
+    }
 
     fun onQueryChange(value: String) {
         _query.value = value

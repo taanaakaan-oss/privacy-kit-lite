@@ -99,10 +99,7 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
                 )
             }
             composable(Routes.APPS) {
-                AppsScreen(
-                    onAppClick = { appId -> navController.navigate(Routes.appProfiles(appId)) },
-                    onAddApp = { navController.navigate(Routes.ADD_APP) },
-                )
+                AppsScreen(onAddApp = { navController.navigate(Routes.ADD_APP) })
             }
             composable(Routes.PROFILES) {
                 ProfilesTabScreen(

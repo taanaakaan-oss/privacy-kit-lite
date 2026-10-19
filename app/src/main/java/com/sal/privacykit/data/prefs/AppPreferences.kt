@@ -6,10 +6,13 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import org.json.JSONArray
+import org.json.JSONObject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
+
+data class RegisteredApp(val appName: String, val enabled: Boolean)
 
 private val Context.dataStore by preferencesDataStore(name = "app_preferences")
 
@@ -48,23 +51,60 @@ class AppPreferences(private val context: Context) {
         context.dataStore.edit { it[Keys.ACTIVE_PROFILE_GLOBAL] = profileId.toString() }
     }
 
-    val registeredAppIds: Flow<Set<String>> = context.dataStore.data.map { prefs ->
-        runCatching {
-            val array = JSONArray(prefs[Keys.REGISTERED_APPS] ?: "[]")
-            (0 until array.length()).mapNotNull { array.optString(it).takeIf(String::isNotBlank) }.toSet()
-        }.getOrDefault(emptySet())
+    val registeredApps: Flow<Map<String, RegisteredApp>> = context.dataStore.data.map { prefs ->
+        decodeRegisteredApps(prefs[Keys.REGISTERED_APPS] ?: "[]")
     }
 
-    suspend fun registerApp(appId: String) {
+    val registeredAppIds: Flow<Set<String>> = registeredApps.map { apps ->
+        apps.filterValues { it.enabled }.keys
+    }
+
+    suspend fun registerApp(appId: String, appName: String = appId) {
         if (appId.isBlank()) return
         context.dataStore.edit { prefs ->
-            val current = runCatching {
-                val array = JSONArray(prefs[Keys.REGISTERED_APPS] ?: "[]")
-                (0 until array.length()).mapNotNull { array.optString(it).takeIf(String::isNotBlank) }.toSet()
-            }.getOrDefault(emptySet())
-            prefs[Keys.REGISTERED_APPS] = JSONArray((current + appId).sorted()).toString()
+            val current = decodeRegisteredApps(prefs[Keys.REGISTERED_APPS] ?: "[]").toMutableMap()
+            val old = current[appId]
+            val updated = RegisteredApp(appName.ifBlank { old?.appName ?: appId }, old?.enabled ?: true)
+            if (old != updated) {
+                current[appId] = updated
+                prefs[Keys.REGISTERED_APPS] = encodeRegisteredApps(current)
+            }
         }
     }
+
+    suspend fun setAppEnabled(appId: String, appName: String, enabled: Boolean) {
+        if (appId.isBlank()) return
+        context.dataStore.edit { prefs ->
+            val current = decodeRegisteredApps(prefs[Keys.REGISTERED_APPS] ?: "[]").toMutableMap()
+            current[appId] = RegisteredApp(appName.ifBlank { current[appId]?.appName ?: appId }, enabled)
+            prefs[Keys.REGISTERED_APPS] = encodeRegisteredApps(current)
+        }
+    }
+
+    private fun decodeRegisteredApps(raw: String): Map<String, RegisteredApp> {
+        val json = runCatching { JSONObject(raw) }.getOrNull()
+        if (json != null) {
+            return json.keys().asSequence().mapNotNull { packageName ->
+                val value = json.opt(packageName)
+                val entry = if (value is JSONObject) {
+                    RegisteredApp(value.optString("appName", packageName), value.optBoolean("enabled", true))
+                } else RegisteredApp(packageName, true)
+                packageName.takeIf(String::isNotBlank)?.let { it to entry }
+            }.toMap()
+        }
+        val array = runCatching { JSONArray(raw) }.getOrNull() ?: return emptyMap()
+        return (0 until array.length()).mapNotNull { index ->
+            array.optString(index).takeIf(String::isNotBlank)?.let { it to RegisteredApp(it, true) }
+        }.toMap()
+    }
+
+    private fun encodeRegisteredApps(apps: Map<String, RegisteredApp>): String =
+        JSONObject().apply {
+            apps.toSortedMap().forEach { (packageName, entry) ->
+                put(packageName, JSONObject().put("appName", entry.appName).put("enabled", entry.enabled))
+            }
+        }.toString()
+    
 
     val hasSeenOnboarding: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[Keys.HAS_SEEN_ONBOARDING] ?: false

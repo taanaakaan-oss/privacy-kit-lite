@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,10 +23,10 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Switch
 
 @Composable
-fun AppsScreen(onAppClick: (String) -> Unit, onAddApp: () -> Unit) {
+fun AppsScreen(onAddApp: () -> Unit) {
     val application = LocalContext.current.applicationContext as PrivacyKitApplication
     val viewModel: AppsViewModel = viewModel(
         factory = viewModelFactory {
@@ -61,19 +60,16 @@ fun AppsScreen(onAppClick: (String) -> Unit, onAddApp: () -> Unit) {
                 )
             }
             items(apps, key = { it.app.id }) { entry ->
-                val label = "Registered app"
                 BasicComponent(
                     title = entry.app.name,
-                    summary = label,
+                    summary = if (entry.enabled) "Enabled" else "Disabled",
                     startAction = { AppIconBadge(entry.app) },
                     endActions = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                        Switch(
+                            checked = entry.enabled,
+                            onCheckedChange = { viewModel.setAppEnabled(entry, it) },
                         )
                     },
-                    onClick = { onAppClick(entry.app.id) },
                 )
             }
         }

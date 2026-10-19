@@ -169,7 +169,8 @@ class ProfileRepository(
             ),
         )
         serviceConnection.requestScope(appId)
-        appPreferences.setActiveProfile(appId, id)
+        appPreferences.setActiveProfileGlobal(id)
+        appPreferences.registerApp(appId)
         syncExport()
         return id
     }
@@ -369,7 +370,8 @@ class ProfileRepository(
     private suspend fun syncExport() {
         val profiles = observeAll().first()
         val activeProfileId = appPreferences.activeProfileGlobalId.first()
-        val registeredAppIds = appPreferences.registeredAppIds.first() + profiles.map { it.appId }
+        val registeredApps = appPreferences.registeredApps.first()
+        val registeredAppIds = registeredApps.filterValues { it.enabled }.keys + profiles.map { it.appId }.filter { it !in registeredApps }
         val customHooksJson = appPreferences.customHooksJson.first()
         XposedConfigExporter.export(serviceConnection, profiles, activeProfileId, registeredAppIds, customHooksJson)
     }
