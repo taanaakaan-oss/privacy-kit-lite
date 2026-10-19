@@ -119,7 +119,7 @@ class ProfileRepository(
 
     suspend fun activeOrFallbackProfile(appId: String): Profile? {
         val activeId = appPreferences.activeProfileGlobalId.first()
-        return selectActiveOrFallback(observeForApp(appId).first(), activeId)
+        return selectActiveOrFallback(observeAll().first(), activeId)
     }
 
     suspend fun createProfile(

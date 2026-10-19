@@ -16,8 +16,13 @@ class ProfilesTabViewModel(private val profileRepository: ProfileRepository) : V
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query
 
-    val activeProfileId: StateFlow<Long?> = profileRepository.activeProfileIdGlobal()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    val activeProfileId: StateFlow<Long?> = combine(
+        profileRepository.observeAll(),
+        profileRepository.activeProfileIdGlobal(),
+    ) { all, selectedId ->
+        all.firstOrNull { it.id == selectedId && !it.archived }?.id
+            ?: all.firstOrNull { !it.archived }?.id
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val profiles: StateFlow<List<Profile>> = combine(profileRepository.observeAll(), _query) { all, query ->
         all.filterNot { it.archived }
