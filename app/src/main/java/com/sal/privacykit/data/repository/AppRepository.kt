@@ -17,7 +17,10 @@ class AppRepository(
     private val appResolver: AppResolver,
     private val appPreferences: AppPreferences,
 ) {
-    suspend fun setAppEnabled(appId: String, appName: String, enabled: Boolean) = appPreferences.setAppEnabled(appId, appName, enabled)
+    suspend fun setAppEnabled(appId: String, appName: String, enabled: Boolean) {
+        appPreferences.setAppEnabled(appId, appName, enabled)
+        profileRepository.resync()
+    }
 
     suspend fun registerApp(appId: String, appName: String) = appPreferences.registerApp(appId, appName)
 
