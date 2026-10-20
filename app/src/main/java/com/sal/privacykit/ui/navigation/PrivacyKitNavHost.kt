@@ -142,6 +142,7 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
             ) { entry ->
                 val appId = entry.arguments?.getString("appId").orEmpty()
                 AppProfilesScreen(
+                    appId = appId,
                     onBack = { navController.popBackStack() },
                     onProfileClick = { profileId -> navController.navigate(Routes.profileDetails(profileId)) },
                     onCreateProfile = { navController.navigate(Routes.createProfile()) },
@@ -157,8 +158,6 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
                     onBack = { navController.popBackStack() },
                     onDeviceTemplateClick = { id -> navController.navigate(Routes.deviceTemplate(id)) },
                     onIdentifiersClick = { id -> navController.navigate(Routes.identifiers(id)) },
-                    onAppsUsingProfileClick = { appId -> navController.navigate(Routes.appProfiles(appId)) },
-                    onLaunchOptionsClick = { id -> navController.navigate(Routes.launchOptions(id)) },
                 )
             }
             composable(
@@ -220,7 +219,6 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
             }
             composable(Routes.CUSTOM_DEVICE) {
                 CustomDeviceScreen(
-                    appId = appId,
                     onBack = { navController.popBackStack() },
                     onCreated = { profileId ->
                         navController.popBackStack()
