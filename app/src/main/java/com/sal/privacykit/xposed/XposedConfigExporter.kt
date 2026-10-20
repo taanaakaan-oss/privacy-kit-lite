@@ -31,7 +31,7 @@ object XposedConfigExporter {
         val root = JSONObject()
         val activeProfile = selectActiveOrFallback(profiles, activeProfileId)
         if (activeProfile != null) {
-            (registeredAppIds + profiles.map { it.appId }).forEach { appId ->
+            registeredAppIds.forEach { appId ->
                 root.put(appId, profileToJson(activeProfile))
             }
         }
