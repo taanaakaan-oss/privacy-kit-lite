@@ -145,7 +145,6 @@ class ProfileRepository(
         val id = dao.insert(
             ProfileEntity(
                 name = name,
-                appId = appId,
                 deviceTemplateId = "custom_device",
                 profileMode = ProfileMode.ISOLATED.name,
                 identifierRules = encodeRules(defaultRules()),
@@ -159,9 +158,7 @@ class ProfileRepository(
                 identifierValues = encodeValues(defaultValues(id, "custom_device", customDeviceName, customDeviceManufacturer)),
             ),
         )
-        serviceConnection.requestScope(appId)
         appPreferences.setActiveProfileGlobal(id)
-        appPreferences.registerApp(appId)
         syncExport()
         return id
     }
@@ -250,7 +247,6 @@ class ProfileRepository(
     private fun toEntity(profile: Profile): ProfileEntity = ProfileEntity(
         id = profile.id,
         name = profile.name,
-        appId = profile.appId,
         deviceTemplateId = profile.deviceTemplateId,
         profileMode = profile.profileMode.name,
         identifierRules = encodeRules(profile.identifierRules.filterKeys { it in IdentifierCatalog.allowedKeys }),
