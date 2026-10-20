@@ -16,7 +16,6 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.sal.privacykit.PrivacyKitApplication
 import com.sal.privacykit.data.model.DeviceTemplateCatalog
-import com.sal.privacykit.ui.components.AppIconBadge
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -25,18 +24,16 @@ import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 
 @Composable
 fun CloneProfileScreen(
-    appId: String,
     onBack: () -> Unit,
     onCloned: (Long) -> Unit,
 ) {
     val application = LocalContext.current.applicationContext as PrivacyKitApplication
     val viewModel: CloneProfileViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { CloneProfileViewModel(appId, application.container.profileRepository) }
+            initializer { CloneProfileViewModel(application.container.profileRepository) }
         },
     )
     val profiles by viewModel.profiles.collectAsState()
-    val resolver = application.container.appResolver
 
     Scaffold(
         topBar = {
@@ -52,12 +49,11 @@ fun CloneProfileScreen(
     ) { innerPadding ->
         LazyColumn(modifier = Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding())) {
             items(profiles, key = { it.id }) { profile ->
-                val app = resolver.resolve(profile.appId)
                 val template = DeviceTemplateCatalog.byId(profile.deviceTemplateId)
                 BasicComponent(
                     title = profile.name,
-                    summary = "${app.name} - ${profile.deviceLabel(template.name, template.manufacturer)}",
-                    startAction = { AppIconBadge(app) },
+                    summary = profile.deviceLabel(template.name, template.manufacturer),
+                    
                     onClick = { viewModel.clone(profile, onCloned) },
                 )
             }
