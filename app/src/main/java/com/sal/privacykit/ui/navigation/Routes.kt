@@ -10,7 +10,6 @@ object Routes {
     const val DEVELOPER_SETTINGS = "developer_settings"
     const val CUSTOM_HOOKS = "custom_hooks"
 
-    const val APP_PROFILES = "app_profiles/{appId}"
     const val PROFILE_DETAILS = "profile_details/{profileId}"
     const val DEVICE_TEMPLATE = "device_template/{profileId}"
     const val IDENTIFIERS = "identifiers/{profileId}"
@@ -20,7 +19,6 @@ object Routes {
     const val CUSTOM_DEVICE = "custom_device"
     const val LAUNCH_OPTIONS = "launch_options/{profileId}"
 
-    fun appProfiles(appId: String) = "app_profiles/$appId"
     fun profileDetails(profileId: Long) = "profile_details/$profileId"
     fun deviceTemplate(profileId: Long) = "device_template/$profileId"
     fun identifiers(profileId: Long) = "identifiers/$profileId"
