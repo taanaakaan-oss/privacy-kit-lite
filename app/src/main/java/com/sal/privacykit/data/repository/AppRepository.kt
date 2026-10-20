@@ -26,11 +26,11 @@ class AppRepository(
 
     fun observeApps(): Flow<List<AppWithProfileCount>> =
         combine(profileRepository.observeAll(), appPreferences.registeredApps) { profiles, registeredApps ->
-            val allAppIds = registeredApps.keys + profiles.map { it.appId }
+            val allAppIds = registeredApps.keys
             allAppIds.map { appId ->
                 AppWithProfileCount(
                     app = appResolver.resolve(appId),
-                    profileCount = profiles.count { it.appId == appId && !it.archived },
+                    profileCount = profiles.count { !it.archived },
                     enabled = registeredApps[appId]?.enabled ?: true,
                 )
             }.sortedBy { it.app.name.lowercase() }
