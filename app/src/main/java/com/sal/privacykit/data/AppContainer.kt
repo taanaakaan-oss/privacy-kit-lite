@@ -5,6 +5,7 @@ import com.sal.privacykit.data.db.AppDatabase
 import com.sal.privacykit.data.prefs.AppPreferences
 import com.sal.privacykit.data.repository.AppRepository
 import com.sal.privacykit.data.repository.ProfileRepository
+import com.sal.privacykit.data.repository.RootAppDataManager
 import com.sal.privacykit.xposed.XposedServiceConnection
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +20,8 @@ class AppContainer(context: Context) {
     val appPreferences = AppPreferences(context)
     val appResolver = AppResolver(context)
     val xposedServiceConnection = XposedServiceConnection()
-    val profileRepository = ProfileRepository(database, xposedServiceConnection, appPreferences)
+    val rootAppDataManager = RootAppDataManager()
+    val profileRepository = ProfileRepository(database, xposedServiceConnection, appPreferences, rootAppDataManager)
     val appRepository = AppRepository(profileRepository, appResolver, appPreferences)
 
     init {
