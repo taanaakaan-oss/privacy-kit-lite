@@ -28,14 +28,13 @@ import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 
 @Composable
 fun CustomDeviceScreen(
-    appId: String,
     onBack: () -> Unit,
     onCreated: (Long) -> Unit,
 ) {
     val application = LocalContext.current.applicationContext as PrivacyKitApplication
     val viewModel: CustomDeviceViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { CustomDeviceViewModel(appId, application.container.profileRepository) }
+            initializer { CustomDeviceViewModel(application.container.profileRepository) }
         },
     )
 
