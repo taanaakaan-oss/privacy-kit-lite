@@ -70,7 +70,7 @@ fun AppProfilesScreen(
     appId: String,
     onBack: () -> Unit,
     onProfileClick: (Long) -> Unit,
-    onCreateProfile: (String) -> Unit,
+    onCreateProfile: () -> Unit,
 ) {
     val application = LocalContext.current.applicationContext as PrivacyKitApplication
     val viewModel: AppProfilesViewModel = viewModel(
@@ -168,7 +168,7 @@ fun AppProfilesScreen(
         bottomBar = {
             Surface {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                    Button(onClick = { onCreateProfile(appId) }, modifier = Modifier.fillMaxWidth()) {
+                    Button(onClick = onCreateProfile, modifier = Modifier.fillMaxWidth()) {
                         Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                         Text("  Create Profile")
                     }
