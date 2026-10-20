@@ -81,7 +81,6 @@ private fun defaultValues(
 private fun ProfileEntity.toDomain(): Profile = Profile(
     id = id,
     name = name,
-    appId = appId,
     deviceTemplateId = deviceTemplateId,
     profileMode = runCatching { ProfileMode.valueOf(profileMode) }.getOrDefault(ProfileMode.ISOLATED),
     identifierRules = decodeRules(identifierRules).ifEmpty { defaultRules() },
@@ -112,25 +111,20 @@ class ProfileRepository(
 
     fun activeProfileIdGlobal(): Flow<Long?> = appPreferences.activeProfileGlobalId
 
-    fun observeForApp(appId: String): Flow<List<Profile>> =
-        dao.observeForApp(appId).map { list -> list.map { it.toDomain() } }
-
     fun observeById(id: Long): Flow<Profile?> = dao.observeById(id).map { it?.toDomain() }
 
-    suspend fun activeOrFallbackProfile(appId: String): Profile? {
+    suspend fun activeOrFallbackProfile(): Profile? {
         val activeId = appPreferences.activeProfileGlobalId.first()
         return selectActiveOrFallback(observeAll().first(), activeId)
     }
 
     suspend fun createProfile(
         name: String,
-        appId: String,
         deviceTemplateId: String,
     ): Long {
         val id = dao.insert(
             ProfileEntity(
                 name = name,
-                appId = appId,
                 deviceTemplateId = deviceTemplateId,
                 profileMode = ProfileMode.ISOLATED.name,
                 identifierRules = encodeRules(defaultRules()),
@@ -138,16 +132,13 @@ class ProfileRepository(
             ),
         )
         dao.update(dao.observeById(id).first()!!.copy(identifierValues = encodeValues(defaultValues(id, deviceTemplateId))))
-        serviceConnection.requestScope(appId)
         appPreferences.setActiveProfileGlobal(id)
-        appPreferences.registerApp(appId)
         syncExport()
         return id
     }
 
     suspend fun createCustomProfile(
         name: String,
-        appId: String,
         customDeviceName: String,
         customDeviceManufacturer: String,
     ): Long {
@@ -175,18 +166,15 @@ class ProfileRepository(
         return id
     }
 
-    suspend fun cloneProfile(source: Profile, targetAppId: String): Long {
+    suspend fun cloneProfile(source: Profile): Long {
         val id = dao.insert(
             toEntity(source).copy(
                 id = 0,
-                appId = targetAppId,
                 name = "${source.name} Copy",
                 createdAt = System.currentTimeMillis(),
             ),
         )
-        serviceConnection.requestScope(targetAppId)
         appPreferences.setActiveProfileGlobal(id)
-        appPreferences.registerApp(targetAppId)
         syncExport()
         return id
     }
@@ -283,7 +271,6 @@ class ProfileRepository(
                 JSONObject().apply {
                     put("id", profile.id)
                     put("name", profile.name)
-                    put("appId", profile.appId)
                     put("deviceTemplateId", profile.deviceTemplateId)
                     put("identifierRules", encodeRules(profile.identifierRules))
                     put("identifierValues", encodeValues(profile.identifierValues))
@@ -309,7 +296,6 @@ class ProfileRepository(
             dao.insert(
                 ProfileEntity(
                     name = obj.getString("name"),
-                    appId = obj.getString("appId"),
                     deviceTemplateId = obj.getString("deviceTemplateId"),
                     profileMode = obj.optString("profileMode", ProfileMode.ISOLATED.name),
                     identifierRules = encodeRules(decodeRules(obj.optString("identifierRules", ""))),
@@ -364,14 +350,11 @@ class ProfileRepository(
         if (changed) syncExport()
     }
 
-    suspend fun profileBelongsToApp(profileId: Long, appId: String): Boolean =
-        dao.findAppId(profileId) == appId
-
     private suspend fun syncExport() {
         val profiles = observeAll().first()
         val activeProfileId = appPreferences.activeProfileGlobalId.first()
         val registeredApps = appPreferences.registeredApps.first()
-        val registeredAppIds = registeredApps.filterValues { it.enabled }.keys + profiles.map { it.appId }.filter { it !in registeredApps }
+        val registeredAppIds = registeredApps.filterValues { it.enabled }.keys
         val customHooksJson = appPreferences.customHooksJson.first()
         XposedConfigExporter.export(serviceConnection, profiles, activeProfileId, registeredAppIds, customHooksJson)
     }
