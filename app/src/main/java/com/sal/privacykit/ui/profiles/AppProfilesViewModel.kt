@@ -19,7 +19,7 @@ class AppProfilesViewModel(
     private val profileRepository: ProfileRepository,
     private val profileLauncher: ProfileLauncher,
 ) : ViewModel() {
-    private val allProfiles: StateFlow<List<Profile>> = profileRepository.observeForApp(appId)
+    private val allProfiles: StateFlow<List<Profile>> = profileRepository.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _showArchived = MutableStateFlow(false)
