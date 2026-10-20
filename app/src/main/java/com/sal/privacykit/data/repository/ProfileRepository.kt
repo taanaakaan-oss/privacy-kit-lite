@@ -104,6 +104,7 @@ class ProfileRepository(
     private val database: AppDatabase,
     private val serviceConnection: XposedServiceConnection,
     private val appPreferences: AppPreferences,
+    private val rootAppDataManager: RootAppDataManager,
 ) {
     private val dao = database.profileDao()
 
@@ -132,7 +133,7 @@ class ProfileRepository(
             ),
         )
         dao.update(dao.observeById(id).first()!!.copy(identifierValues = encodeValues(defaultValues(id, deviceTemplateId))))
-        appPreferences.setActiveProfileGlobal(id)
+        provisionProfileData(id)
         syncExport()
         return id
     }
@@ -238,8 +239,20 @@ class ProfileRepository(
     }
 
     suspend fun setActiveProfile(profile: Profile) {
+        val registeredPackages = appPreferences.registeredApps.first().keys
+        rootAppDataManager.switchAppsToProfile(registeredPackages, profile.id)
         appPreferences.setActiveProfileGlobal(profile.id)
         syncExport()
+    }
+
+    suspend fun provisionAppDataForPackage(packageName: String) {
+        val profileIds = observeAll().first().map { it.id }
+        rootAppDataManager.provisionApp(packageName, profileIds)
+    }
+
+    private suspend fun provisionProfileData(profileId: Long) {
+        val packages = appPreferences.registeredApps.first().keys
+        packages.forEach { packageName -> rootAppDataManager.provisionApp(packageName, listOf(profileId)) }
     }
 
     suspend fun resync() = syncExport()
