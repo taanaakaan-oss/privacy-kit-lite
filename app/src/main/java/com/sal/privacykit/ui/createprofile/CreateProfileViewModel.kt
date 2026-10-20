@@ -6,7 +6,6 @@ import com.sal.privacykit.data.repository.ProfileRepository
 import kotlinx.coroutines.launch
 
 class CreateProfileViewModel(
-    private val appId: String,
     private val profileRepository: ProfileRepository,
 ) : ViewModel() {
     fun createFromTemplate(templateId: String, templateName: String, onCreated: (Long) -> Unit) {
@@ -14,7 +13,6 @@ class CreateProfileViewModel(
             onCreated(
                 profileRepository.createProfile(
                     name = templateName,
-                    appId = appId,
                     deviceTemplateId = templateId,
                 ),
             )
