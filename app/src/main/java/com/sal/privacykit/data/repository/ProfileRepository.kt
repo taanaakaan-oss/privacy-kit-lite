@@ -159,7 +159,7 @@ class ProfileRepository(
                 identifierValues = encodeValues(defaultValues(id, "custom_device", customDeviceName, customDeviceManufacturer)),
             ),
         )
-        appPreferences.setActiveProfileGlobal(id)
+        provisionProfileData(id)
         syncExport()
         return id
     }
@@ -302,7 +302,7 @@ class ProfileRepository(
         var count = 0
         for (i in 0 until array.length()) {
             val obj = array.getJSONObject(i)
-            dao.insert(
+            val importedId = dao.insert(
                 ProfileEntity(
                     name = obj.getString("name"),
                     deviceTemplateId = obj.getString("deviceTemplateId"),
@@ -318,6 +318,7 @@ class ProfileRepository(
                     notes = obj.takeIf { it.has("notes") && !it.isNull("notes") }?.getString("notes"),
                 ),
             )
+            provisionProfileData(importedId)
             count++
         }
         syncExport()
