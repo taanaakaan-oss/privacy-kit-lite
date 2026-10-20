@@ -10,13 +10,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class CloneProfileViewModel(
-    private val appId: String,
     private val profileRepository: ProfileRepository,
 ) : ViewModel() {
     val profiles: StateFlow<List<Profile>> = profileRepository.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun clone(source: Profile, onCreated: (Long) -> Unit) {
-        viewModelScope.launch { onCreated(profileRepository.cloneProfile(source, appId)) }
+        viewModelScope.launch { onCreated(profileRepository.cloneProfile(source)) }
     }
 }
