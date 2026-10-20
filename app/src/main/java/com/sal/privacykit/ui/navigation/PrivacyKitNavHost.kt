@@ -128,6 +128,7 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
                 AddAppScreen(
                     onBack = { navController.popBackStack() },
                     onAppSelected = { packageName ->
+                        application.container.xposedServiceConnection.requestScope(packageName)
                         scope.launch {
                             application.container.appPreferences.registerApp(packageName)
                             navController.popBackStack()
