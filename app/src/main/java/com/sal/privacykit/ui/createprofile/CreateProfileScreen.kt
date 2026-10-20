@@ -34,16 +34,15 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun CreateProfileScreen(
-    appId: String,
     onBack: () -> Unit,
     onProfileCreated: (Long) -> Unit,
-    onCloneExisting: (String) -> Unit,
-    onCustomDevice: (String) -> Unit,
+    onCloneExisting: () -> Unit,
+    onCustomDevice: () -> Unit,
 ) {
     val application = LocalContext.current.applicationContext as PrivacyKitApplication
     val viewModel: CreateProfileViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { CreateProfileViewModel(appId, application.container.profileRepository) }
+            initializer { CreateProfileViewModel(application.container.profileRepository) }
         },
     )
     var showAllTemplates by remember { mutableStateOf(false) }
@@ -77,7 +76,7 @@ fun CreateProfileScreen(
                     icon = Icons.Filled.ContentCopy,
                     title = "Clone Existing Profile",
                     subtitle = "Create a new profile from an existing one",
-                    onClick = { onCloneExisting(appId) },
+                    onClick = { onCloneExisting() },
                 )
             }
             item {
@@ -85,7 +84,7 @@ fun CreateProfileScreen(
                     icon = Icons.Filled.Tune,
                     title = "Custom Device",
                     subtitle = "Define a custom model and manufacturer",
-                    onClick = { onCustomDevice(appId) },
+                    onClick = { onCustomDevice() },
                 )
             }
             item { SectionHeader(if (showAllTemplates) "All Templates" else "Popular Templates") }
