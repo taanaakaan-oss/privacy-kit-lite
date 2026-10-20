@@ -104,7 +104,7 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
             composable(Routes.PROFILES) {
                 ProfilesTabScreen(
                     onGroupClick = { profileId -> navController.navigate(Routes.profileDetails(profileId)) },
-                    onCreateProfile = { navController.navigate(Routes.ADD_APP) },
+                    onCreateProfile = { navController.navigate(Routes.createProfile()) },
                 )
             }
             composable(Routes.SETTINGS) {
@@ -132,7 +132,6 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
                         scope.launch {
                             application.container.appPreferences.registerApp(packageName)
                             navController.popBackStack()
-                            navController.navigate(Routes.createProfile(packageName))
                         }
                     },
                 )
@@ -143,10 +142,9 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
             ) { entry ->
                 val appId = entry.arguments?.getString("appId").orEmpty()
                 AppProfilesScreen(
-                    appId = appId,
                     onBack = { navController.popBackStack() },
                     onProfileClick = { profileId -> navController.navigate(Routes.profileDetails(profileId)) },
-                    onCreateProfile = { id -> navController.navigate(Routes.createProfile(id)) },
+                    onCreateProfile = { navController.navigate(Routes.createProfile()) },
                 )
             }
             composable(
@@ -199,29 +197,19 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
                 val identifierKey = entry.arguments?.getString("identifierKey") ?: return@composable
                 IdentifierRuleScreen(profileId = profileId, identifierKey = identifierKey, onBack = { navController.popBackStack() })
             }
-            composable(
-                route = Routes.CREATE_PROFILE,
-                arguments = listOf(navArgument("appId") { type = NavType.StringType }),
-            ) { entry ->
-                val appId = entry.arguments?.getString("appId").orEmpty()
+            composable(Routes.CREATE_PROFILE) {
                 CreateProfileScreen(
-                    appId = appId,
                     onBack = { navController.popBackStack() },
                     onProfileCreated = { profileId ->
                         navController.popBackStack()
                         navController.navigate(Routes.profileDetails(profileId))
                     },
-                    onCloneExisting = { id -> navController.navigate(Routes.cloneProfile(id)) },
-                    onCustomDevice = { id -> navController.navigate(Routes.customDevice(id)) },
+                    onCloneExisting = { navController.navigate(Routes.cloneProfile()) },
+                    onCustomDevice = { navController.navigate(Routes.customDevice()) },
                 )
             }
-            composable(
-                route = Routes.CLONE_PROFILE,
-                arguments = listOf(navArgument("appId") { type = NavType.StringType }),
-            ) { entry ->
-                val appId = entry.arguments?.getString("appId").orEmpty()
+            composable(Routes.CLONE_PROFILE) {
                 CloneProfileScreen(
-                    appId = appId,
                     onBack = { navController.popBackStack() },
                     onCloned = { profileId ->
                         navController.popBackStack()
@@ -230,11 +218,7 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
                     },
                 )
             }
-            composable(
-                route = Routes.CUSTOM_DEVICE,
-                arguments = listOf(navArgument("appId") { type = NavType.StringType }),
-            ) { entry ->
-                val appId = entry.arguments?.getString("appId").orEmpty()
+            composable(Routes.CUSTOM_DEVICE) {
                 CustomDeviceScreen(
                     appId = appId,
                     onBack = { navController.popBackStack() },
