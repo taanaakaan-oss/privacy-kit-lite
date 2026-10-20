@@ -30,7 +30,6 @@ import com.sal.privacykit.ui.identifiers.IdentifierRuleScreen
 import com.sal.privacykit.ui.identifiers.IdentifiersScreen
 import com.sal.privacykit.ui.launchoptions.LaunchOptionsScreen
 import com.sal.privacykit.ui.onboarding.OnboardingScreen
-import com.sal.privacykit.ui.profiles.AppProfilesScreen
 import com.sal.privacykit.ui.profiles.ProfileDetailsScreen
 import com.sal.privacykit.ui.profilestab.ProfilesTabScreen
 import com.sal.privacykit.ui.settings.AppearanceScreen
@@ -134,18 +133,6 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
                             navController.popBackStack()
                         }
                     },
-                )
-            }
-            composable(
-                route = Routes.APP_PROFILES,
-                arguments = listOf(navArgument("appId") { type = NavType.StringType }),
-            ) { entry ->
-                val appId = entry.arguments?.getString("appId").orEmpty()
-                AppProfilesScreen(
-                    appId = appId,
-                    onBack = { navController.popBackStack() },
-                    onProfileClick = { profileId -> navController.navigate(Routes.profileDetails(profileId)) },
-                    onCreateProfile = { navController.navigate(Routes.createProfile()) },
                 )
             }
             composable(
