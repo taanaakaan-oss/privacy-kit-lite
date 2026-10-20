@@ -172,7 +172,7 @@ class ProfileRepository(
                 createdAt = System.currentTimeMillis(),
             ),
         )
-        appPreferences.setActiveProfileGlobal(id)
+        provisionProfileData(id)
         syncExport()
         return id
     }
