@@ -5,7 +5,6 @@ enum class ProfileTagColor { RED, BLUE, GREEN }
 data class Profile(
     val id: Long,
     val name: String,
-    val appId: String,
     val deviceTemplateId: String,
     val profileMode: ProfileMode,
     val identifierRules: Map<String, IdentifierRuleType>,
