@@ -21,7 +21,6 @@ class AppContainer(context: Context) {
     val xposedServiceConnection = XposedServiceConnection()
     val profileRepository = ProfileRepository(database, xposedServiceConnection, appPreferences)
     val appRepository = AppRepository(profileRepository, appResolver, appPreferences)
-    val profileLauncher = ProfileLauncher(profileRepository)
 
     init {
         xposedServiceConnection.onBind = {
