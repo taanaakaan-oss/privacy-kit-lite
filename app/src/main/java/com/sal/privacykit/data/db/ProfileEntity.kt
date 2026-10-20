@@ -7,7 +7,6 @@ import androidx.room.PrimaryKey
 data class ProfileEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
-    val appId: String,
     val deviceTemplateId: String,
     val profileMode: String,
     val identifierRules: String,
