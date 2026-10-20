@@ -130,6 +130,7 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
                     onAppSelected = { packageName ->
                         application.container.xposedServiceConnection.requestScope(packageName)
                         scope.launch {
+                            application.container.profileRepository.provisionAppDataForPackage(packageName)
                             application.container.appPreferences.registerApp(packageName)
                             navController.popBackStack()
                         }
