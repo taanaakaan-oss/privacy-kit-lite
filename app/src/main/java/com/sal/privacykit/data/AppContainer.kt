@@ -32,6 +32,10 @@ class AppContainer(context: Context) {
             profileRepository.backfillMissingStaticValues()
             profileRepository.fixTemplateMismatchedValues()
             profileRepository.observeAll().first()
+            val activeProfileId = appPreferences.activeProfileGlobalId.first()
+            if (activeProfileId != null) {
+                rootAppDataManager.switchAppsToProfile(appPreferences.registeredApps.first().keys, activeProfileId)
+            }
         }
     }
 }
