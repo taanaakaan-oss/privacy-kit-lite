@@ -30,7 +30,7 @@ class RootAppDataManager {
             append("echo === /data/data target ===; ")
             append("readlink -f /data/data; ")
             append("echo === mountinfo ===; ")
-            append("grep -E " /data(/data|/user/0)( |$)" /proc/self/mountinfo; ")
+            append("grep -E ' /data(/data|/user/0)( |$)' /proc/self/mountinfo; ")
             append("echo === target app dirs ===; ")
             append("ls -ld /data/data/jp.co.barows.kenshocrane /data/user/0/jp.co.barows.kenshocrane; ")
             append("ls -ld ").append(quote(base)).append(" 2>&1; ")
