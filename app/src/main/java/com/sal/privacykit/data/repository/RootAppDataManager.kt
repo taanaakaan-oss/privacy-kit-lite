@@ -14,6 +14,10 @@ class RootAppDataManager {
         val base = "/data/user/0/$packageName"
         val commands = buildString {
             append("set -e; ")
+            append("id; ")
+            append("ls -ld /data/user/0; ")
+            append("ls -ld ").append(quote(base)).append(" 2>&1; ")
+            append("stat -c '%u:%g' ").append(quote(base)).append(" 2>&1; ")
             append("owner=\$(stat -c '%u:%g' ").append(quote(base)).append("); ")
             profileIds.sorted().forEach { id ->
                 val destination = profileDataPath(packageName, id)
