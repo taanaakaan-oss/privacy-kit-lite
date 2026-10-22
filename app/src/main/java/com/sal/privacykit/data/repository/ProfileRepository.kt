@@ -253,6 +253,7 @@ class ProfileRepository(
     private suspend fun provisionProfileData(profileId: Long) {
         val packages = appPreferences.registeredApps.first().keys
         packages.forEach { packageName -> rootAppDataManager.provisionApp(packageName, listOf(profileId)) }
+        rootAppDataManager.provisionProfileWallpaper(profileId)
     }
 
     suspend fun resync() = syncExport()
