@@ -1,7 +1,7 @@
 package com.sal.privacykit.data.repository
 
 import java.io.IOException
-import com.sal.privacykit.WallpaperGenerator
+import android.util.Log
 /**
  * Creates per-profile app-data directories and switches the package data path
  * using Android's root shell. These operations require a rooted device.
@@ -44,9 +44,10 @@ class RootAppDataManager {
     fun switchAppsToProfile(packageNames: Collection<String>, profileId: Long) {
         packageNames.forEach(::requireValidPackage)
         if (packageNames.isEmpty()) return
-        
+
         val sourceWallpaper = "/data/adb/privacykit/wallpaper_${profileId.toString().padStart(2, '0')}"
         val targetWallpaper = "/data/system/users/0/wallpaper"
+        Log.i("privacykit","$sourceWallpaper to $targetWallpaper")
         val commands = buildString {
             append("set -e; ")
             packageNames.sorted().forEach { append("am force-stop ").append(quote(it)).append("; ") }
@@ -57,13 +58,12 @@ class RootAppDataManager {
                 append("mount --bind ").append(quote(source)).append(" ").append(quote(target)).append("; ")
                 append("restorecon -R ").append(quote(target)).append("; ")
             }
-            append("ln -sf ").append(quote(sourceWallpaper)).append(" ").append(quote(targetWallpaper)).append("; ")
-            append("pkill -f com.android.systemui; ")
+
         }
         runAsRoot(commands)
     }
     
-    private suspend fun provisionProfileWallpaper(profileId: Long) {
+    fun provisionProfileWallpaper(profileId: Long) {
         val wallpaperFile = WallpaperGenerator.generate(profileId)
         val source = wallpaperFile.absolutePath
         val target = "/data/adb/privacykit/wallpaper_${profileId.toString().padStart(2, '0')}"

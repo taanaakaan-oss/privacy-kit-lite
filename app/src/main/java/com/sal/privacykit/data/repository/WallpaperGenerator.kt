@@ -1,4 +1,4 @@
-package com.sal.privacykit
+package com.sal.privacykit.data.repository
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -23,6 +23,7 @@ object WallpaperGenerator {
      * この関数自体は root 権限を取得しない。
      */
     fun generate(profileId: Long): File {
+        
         require(profileId > 0) { "Invalid profileId: $profileId" }
 
         val profileLabel = String.format(Locale.US, "%02d", profileId)
@@ -37,7 +38,9 @@ object WallpaperGenerator {
             Bitmap.Config.ARGB_8888
         )
 
+
         val canvas = Canvas(bitmap)
+        
         canvas.drawColor(Color.BLACK)
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -67,9 +70,11 @@ object WallpaperGenerator {
 
         canvas.drawText(profileLabel, centerX, baseline, paint)
 
+        
+
         val output = File(
-            "/data/adb/privacykit",
-            "wallpaper_${profileLabel}.png"
+            "/data/user/0/com.sal.privacykit.lite/cache",
+            "wallpaper"
         )
 
         output.parentFile?.mkdirs()
@@ -77,6 +82,7 @@ object WallpaperGenerator {
         FileOutputStream(output).use { stream ->
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
         }
+        
 
         bitmap.recycle()
         return output
