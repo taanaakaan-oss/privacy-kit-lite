@@ -13,9 +13,22 @@ import kotlinx.coroutines.launch
 class ProfileSwitchReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != ACTION_SWITCH_PROFILE) return
+        Log.e("ProfileSwitchReceiver", "ENTERED: action=${intent.action}, extras=${intent.extras}")
+        Log.i(
+            TAG,
+            "onReceive: action=${intent.action}, extras=${intent.extras}"
+        )
+
+        if (intent.action != ACTION_SWITCH_PROFILE) {
+            Log.w(TAG, "Unexpected action: ${intent.action}")
+            return
+        }
 
         val profileId = intent.getLongExtra(EXTRA_PROFILE_ID, -1L)
+        Log.i(TAG, "Received profile_id=$profileId")
+        if (intent.action != ACTION_SWITCH_PROFILE) return
+
+        //val profileId = intent.getLongExtra(EXTRA_PROFILE_ID, -1L)
         if (profileId <= 0L) {
             Log.e(TAG, "Missing or invalid profile_id: $profileId")
             return

@@ -32,7 +32,7 @@
         <receiver
             android:name=".ProfileSwitchReceiver"
             android:exported="true"
-            android:permission="android.permission.DUMP">
+            >
 
             <intent-filter>
                 <action android:name="com.sal.privacykit.action.SWITCH_PROFILE" />
