@@ -25,12 +25,17 @@ class RootAppDataManager {
 
             append("owner=$(stat -c '%u:%g' \"\$base\"); ")
             append("echo \"[provision] owner=\$owner\"; ")
+            
+            val packageRoot = "/data/adb/privacykit/$packageName"
+            append("mkdir -p ").append(quote(packageRoot)).append("; ")
+            append("chown 0:0 ").append(quote(packageRoot)).append("; ")
+            append("chmod 700 ").append(quote(packageRoot)).append("; ")
 
             profileIds.sorted().forEach { id ->
                 val destination = profileDataPath(packageName, id)
-                append("mkdir -p ").append(quote(destination)).append("; ")
-                append("chown -R \"\$owner\" ").append(quote(destination)).append("; ")
-                append("echo \"[provision] created ").append(destination).append("\"; ")
+                    append("mkdir -p ").append(quote(destination)).append("; ")
+                    append("chown -R \"\$owner\" ").append(quote(destination)).append("; ")
+                    append("chmod 700 ").append(quote(destination)).append("; ")
             }
         }
         runAsRoot(commands)
@@ -55,7 +60,7 @@ class RootAppDataManager {
     }
 
     private fun profileDataPath(packageName: String, profileId: Long): String =
-        "/data/user/0/${packageName}_${profileId.toString().padStart(2, '0')}"
+        "/data/adb/privacykit/$packageName/${profileId.toString().padStart(2, '0')}"
 
     private fun requireValidPackage(packageName: String) {
         require(packageName.matches(Regex("[A-Za-z0-9_]+(\\.[A-Za-z0-9_]+)+"))) {
