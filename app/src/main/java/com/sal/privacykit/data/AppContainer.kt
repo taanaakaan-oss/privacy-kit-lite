@@ -13,7 +13,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class AppContainer(context: Context) {
+class AppContainer(
+    context: Context,
+    private val profileApplier: ProfileApplier,
+) {
     private val database = AppDatabase.get(context)
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 

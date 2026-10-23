@@ -45,8 +45,6 @@ class RootAppDataManager {
         packageNames.forEach(::requireValidPackage)
         if (packageNames.isEmpty()) return
 
-        val sourceWallpaper = "/data/adb/privacykit/wallpaper_${profileId.toString().padStart(2, '0')}"
-        val targetWallpaper = "/data/system/users/0/wallpaper"
         Log.i("privacykit","$sourceWallpaper to $targetWallpaper")
         val commands = buildString {
             append("set -e; ")
@@ -58,27 +56,11 @@ class RootAppDataManager {
                 append("mount --bind ").append(quote(source)).append(" ").append(quote(target)).append("; ")
                 append("restorecon -R ").append(quote(target)).append("; ")
             }
-            append("cp ").append(quote(sourceWallpaper)).append(" ").append(quote(targetWallpaper)).append("; ")
-            append("pkill -f com.android.systemui; ")
 
         }
         runAsRoot(commands)
     }
     
-    fun provisionProfileWallpaper(profileId: Long) {
-        val wallpaperFile = WallpaperGenerator.generate(profileId)
-        val source = wallpaperFile.absolutePath
-        val target = "/data/adb/privacykit/wallpaper_${profileId.toString().padStart(2, '0')}"
-        val commands = buildString {
-            append("set -e; ")
-            append("mkdir -p /data/adb/privacykit; ")
-            append("mv ").append(quote(source)).append(" ").append(quote(target)).append("; ")
-            append("chown system:system ").append(quote(target)).append("; ")
-            append("chmod 0644 ").append(quote(target)).append("; ")
-        }
-        runAsRoot(commands)    
-    }    
-
     private fun profileDataPath(packageName: String, profileId: Long): String =
         "/data/adb/privacykit/$packageName/${profileId.toString().padStart(2, '0')}"
 

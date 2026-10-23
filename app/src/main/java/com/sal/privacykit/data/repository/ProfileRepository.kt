@@ -105,6 +105,7 @@ class ProfileRepository(
     private val serviceConnection: XposedServiceConnection,
     private val appPreferences: AppPreferences,
     private val rootAppDataManager: RootAppDataManager,
+    private val profileApplier: ProfileApplier,
 ) {
     private val dao = database.profileDao()
 
@@ -239,8 +240,7 @@ class ProfileRepository(
     }
 
     suspend fun setActiveProfile(profile: Profile) {
-        val registeredPackages = appPreferences.registeredApps.first().keys
-        rootAppDataManager.switchAppsToProfile(registeredPackages, profile.id)
+        profileApplier.applyProfile(profile.id)
         appPreferences.setActiveProfileGlobal(profile.id)
         syncExport()
     }
@@ -253,7 +253,6 @@ class ProfileRepository(
     suspend fun provisionProfileData(profileId: Long) {
         val packages = appPreferences.registeredApps.first().keys
         packages.forEach { packageName -> rootAppDataManager.provisionApp(packageName, listOf(profileId)) }
-        rootAppDataManager.provisionProfileWallpaper(profileId)
     }
 
     suspend fun resync() = syncExport()
