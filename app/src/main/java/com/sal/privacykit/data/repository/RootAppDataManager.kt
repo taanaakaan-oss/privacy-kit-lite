@@ -44,8 +44,7 @@ class RootAppDataManager {
     fun switchAppsToProfile(packageNames: Collection<String>, profileId: Long) {
         packageNames.forEach(::requireValidPackage)
         if (packageNames.isEmpty()) return
-
-        Log.i("privacykit","$sourceWallpaper to $targetWallpaper")
+        
         val commands = buildString {
             append("set -e; ")
             packageNames.sorted().forEach { append("am force-stop ").append(quote(it)).append("; ") }

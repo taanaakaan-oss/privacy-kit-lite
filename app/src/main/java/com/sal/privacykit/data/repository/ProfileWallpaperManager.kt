@@ -21,7 +21,7 @@ import java.util.Locale
 class ProfileWallpaperManager @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
-    fun apply(profileId: Long): File {
+    fun apply(profileId: Long) {
         val dir = File(context.filesDir, "profile_wallpapers")
         if (!dir.exists() && !dir.mkdirs()) {
             error("壁紙保存ディレクトリを作成できません: ${dir.absolutePath}")
@@ -49,7 +49,7 @@ class ProfileWallpaperManager @Inject constructor(
     }
 
     private fun createWallpaperImage(file: File, profileId: Long) {
-
+        val profileLabel = String.format(Locale.US, "%02d", profileId)
         // 端末の一般的な縦長壁紙サイズ。必要なら実機の解像度に合わせて変更。
         val width = 1080
         val height = 2400

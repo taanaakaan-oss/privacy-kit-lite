@@ -43,9 +43,9 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 
 private data class BottomTab(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
 
-private val bottomTabs = listOf(
-    BottomTab(Routes.APPS, "Apps", Icons.Filled.Apps),
+private val bottomTabs = listOf(  
     BottomTab(Routes.PROFILES, "Profiles", Icons.Filled.Person),
+    BottomTab(Routes.APPS, "Apps", Icons.Filled.Apps),
     BottomTab(Routes.SETTINGS, "Settings", Icons.Filled.Settings),
 )
 

@@ -4,6 +4,7 @@ import android.content.Context
 import com.sal.privacykit.data.db.AppDatabase
 import com.sal.privacykit.data.prefs.AppPreferences
 import com.sal.privacykit.data.repository.AppRepository
+import com.sal.privacykit.data.repository.ProfileApplier
 import com.sal.privacykit.data.repository.ProfileRepository
 import com.sal.privacykit.data.repository.RootAppDataManager
 import com.sal.privacykit.xposed.XposedServiceConnection
