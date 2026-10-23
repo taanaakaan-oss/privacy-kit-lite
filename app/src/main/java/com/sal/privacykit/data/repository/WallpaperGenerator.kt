@@ -52,7 +52,7 @@ object WallpaperGenerator {
         paint.textSize = width * 0.1f
         // 字形の中心が画面中央に来るよう、ベースラインを補正する。
         val posX = (width - 20).toFloat()
-        val posY = height / 5f - paint.fontMetrics
+        val posY = height / 5f - paint.fontMetrics.top 
 
         canvas.drawText(profileLabel, posX, posY, paint)
 
