@@ -58,7 +58,7 @@ fun PrivacyKitNavHost(navController: NavHostController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.hierarchy?.firstOrNull { it.route in TOP_LEVEL_ROUTES }?.route
     val seenOnboarding = hasSeenOnboarding ?: return
-    val startDestination = if (seenOnboarding) Routes.APPS else Routes.ONBOARDING
+    val startDestination = if (seenOnboarding) Routes.PROFILES else Routes.ONBOARDING
 
     Scaffold(
         bottomBar = {
