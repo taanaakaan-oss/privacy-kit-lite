@@ -1,6 +1,8 @@
 package com.sal.privacykit.data.repository
 
 import com.sal.privacykit.data.prefs.AppPreferences
+import com.sal.privacykit.data.ProfileWallpaperManager
+import kotlinx.coroutines.flow.first
 
 class ProfileApplier (
     private val rootAppDataManager: RootAppDataManager,

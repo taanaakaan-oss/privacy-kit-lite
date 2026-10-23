@@ -24,7 +24,7 @@ class AppContainer(
     val appResolver = AppResolver(context)
     val xposedServiceConnection = XposedServiceConnection()
     val rootAppDataManager = RootAppDataManager()    
-    private val profileWallpaperManager = ProfileWallpaperManager(appContext)
+    private val profileWallpaperManager = ProfileWallpaperManager(context)
     val profileApplier = ProfileApplier(rootAppDataManager, profileWallpaperManager,appPreferences)
     val profileRepository = ProfileRepository(database, xposedServiceConnection, appPreferences, rootAppDataManager,profileApplier)
     val appRepository = AppRepository(profileRepository, appResolver, appPreferences)

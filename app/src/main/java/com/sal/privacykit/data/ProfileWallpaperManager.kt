@@ -1,4 +1,4 @@
-package com.sal.privacykit
+package com.sal.privacykit.data
 
 import android.app.WallpaperManager
 import android.content.Context
