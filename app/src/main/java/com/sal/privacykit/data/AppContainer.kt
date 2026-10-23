@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 
 class AppContainer(
     context: Context,
-    private val profileApplier: ProfileApplier,
 ) {
     private val database = AppDatabase.get(context)
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -24,10 +23,12 @@ class AppContainer(
     val appPreferences = AppPreferences(context)
     val appResolver = AppResolver(context)
     val xposedServiceConnection = XposedServiceConnection()
-    val rootAppDataManager = RootAppDataManager()
-    val profileRepository = ProfileRepository(database, xposedServiceConnection, appPreferences, rootAppDataManager)
+    val rootAppDataManager = RootAppDataManager()    
+    private val profileWallpaperManager = ProfileWallpaperManager(appContext)
+    val profileApplier = ProfileApplier(rootAppDataManager, profileWallpaperManager,appPreferences)
+    val profileRepository = ProfileRepository(database, xposedServiceConnection, appPreferences, rootAppDataManager,profileApplier)
     val appRepository = AppRepository(profileRepository, appResolver, appPreferences)
-
+    
     init {
         xposedServiceConnection.onBind = {
             applicationScope.launch { profileRepository.resync() }

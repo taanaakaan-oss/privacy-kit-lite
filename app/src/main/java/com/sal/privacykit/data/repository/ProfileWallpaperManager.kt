@@ -9,17 +9,14 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
 import android.os.Build
-import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
-import javax.inject.Singleton
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Locale
 
-@Singleton
-class ProfileWallpaperManager @Inject constructor(
-    @ApplicationContext private val context: Context,
+
+class ProfileWallpaperManager (
+    private val context: Context,
 ) {
     fun apply(profileId: Long) {
         val dir = File(context.filesDir, "profile_wallpapers")
