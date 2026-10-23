@@ -29,4 +29,4 @@ object Routes {
     fun launchOptions(profileId: Long) = "launch_options/$profileId"
 }
 
-val TOP_LEVEL_ROUTES = setOf(Routes.APPS, Routes.PROFILES, Routes.SETTINGS)
+val TOP_LEVEL_ROUTES = setOf(Routes.PROFILES, Routes.APPS, Routes.SETTINGS)

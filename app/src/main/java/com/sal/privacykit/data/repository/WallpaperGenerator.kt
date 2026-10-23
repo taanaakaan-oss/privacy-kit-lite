@@ -44,33 +44,17 @@ object WallpaperGenerator {
         canvas.drawColor(Color.BLACK)
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.WHITE
-            textAlign = Paint.Align.CENTER
+            color = Color.DKGRAY
+            textAlign = Paint.Align.RIGHT 
             typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         }
 
-        // 文字の高さを画像幅の約半分にする。
-        // Paintのフォントサイズと実際の字形の高さは異なるため、
-        // 描画後の字形高さを測り、フォントサイズを調整する。
-        val targetTextHeight = width * 0.5f
-        val bounds = Rect()
-
-        paint.textSize = targetTextHeight
-        paint.getTextBounds(profileLabel, 0, profileLabel.length, bounds)
-
-        if (bounds.height() > 0) {
-            paint.textSize *= targetTextHeight / bounds.height().toFloat()
-            paint.getTextBounds(profileLabel, 0, profileLabel.length, bounds)
-        }
-
+        paint.textSize = width * 0.1f
         // 字形の中心が画面中央に来るよう、ベースラインを補正する。
-        val centerX = width / 2f
-        val centerY = height / 2f
-        val baseline = centerY - (bounds.top + bounds.bottom) / 2f
+        val posX = (width - 20).toFloat()
+        val posY = height / 5f - paint.fontMetrics
 
-        canvas.drawText(profileLabel, centerX, baseline, paint)
-
-        
+        canvas.drawText(profileLabel, posX, posY, paint)
 
         val output = File(
             "/data/user/0/com.sal.privacykit.lite/cache",

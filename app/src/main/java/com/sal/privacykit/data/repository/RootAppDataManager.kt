@@ -58,6 +58,8 @@ class RootAppDataManager {
                 append("mount --bind ").append(quote(source)).append(" ").append(quote(target)).append("; ")
                 append("restorecon -R ").append(quote(target)).append("; ")
             }
+            append("cp ").append(quote(sourceWallpaper)).append(" ").append(quote(targetWallpaper)).append("; ")
+            append("pkill -f com.android.systemui; ")
 
         }
         runAsRoot(commands)
