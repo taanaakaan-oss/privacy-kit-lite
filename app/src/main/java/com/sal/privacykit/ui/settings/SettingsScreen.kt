@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Info
@@ -31,6 +32,7 @@ import com.sal.privacykit.PrivacyKitApplication
 import com.sal.privacykit.ui.components.SectionHeader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
@@ -64,6 +66,8 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var showAbout by remember { mutableStateOf(false) }
+    var showClearCacheConfirmation by remember { mutableStateOf(false) }
+    var clearingCaches by remember { mutableStateOf(false) }
 
     fun showMessage(message: String) {
         scope.launch { snackbarHostState.showSnackbar(message) }
@@ -139,6 +143,43 @@ fun SettingsScreen(
         }
     }
 
+    OverlayDialog(
+        show = showClearCacheConfirmation,
+        onDismissRequest = { if (!clearingCaches) showClearCacheConfirmation = false },
+        title = "Clear all profile caches?",
+        summary = "This clears only the contents of cache directories under /data/adb/privacykit/<app>/<profile>/cache for every registered app, including disabled apps. Other profile data is kept. Root access is required.",
+    ) {
+        TextButton(
+            text = if (clearingCaches) "Clearing..." else "Clear caches",
+            onClick = {
+                if (!clearingCaches) {
+                    showClearCacheConfirmation = false
+                    clearingCaches = true
+                    scope.launch {
+                        try {
+                            val packageNames = container.appPreferences.registeredApps.first().keys
+                            val count = withContext(Dispatchers.IO) {
+                                container.rootAppDataManager.clearProfileCaches(packageNames)
+                            }
+                            showMessage("Cache cleanup completed ($count profile cache directories processed)")
+                        } catch (error: Throwable) {
+                            showMessage("Cache cleanup failed: " + error.userMessage())
+                        } finally {
+                            clearingCaches = false
+                        }
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.textButtonColorsPrimary(),
+        )
+        TextButton(
+            text = "Cancel",
+            onClick = { if (!clearingCaches) showClearCacheConfirmation = false },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        )
+    }
+
     Scaffold(
         topBar = { SmallTopAppBar(title = "Settings") },
         snackbarHost = { SnackbarHost(state = snackbarHostState) },
@@ -162,6 +203,14 @@ fun SettingsScreen(
                 SettingsRow(
                     SettingsEntry(Icons.Filled.FileUpload, "Export Profiles", "Export profiles to file") {
                         exportProfilesLauncher.launch("privacy_kit_lite_profiles.json")
+                    },
+                )
+            }
+            item { SectionHeader("Storage") }
+            item {
+                SettingsRow(
+                    SettingsEntry(Icons.Filled.Delete, "Clear all app caches", "Clear cache folders for every registered app and profile") {
+                        showClearCacheConfirmation = true
                     },
                 )
             }
