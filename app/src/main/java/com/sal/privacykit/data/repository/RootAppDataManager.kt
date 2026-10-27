@@ -41,6 +41,41 @@ class RootAppDataManager {
         runAsRoot(commands)
     }
 
+
+    /**
+     * Removes the contents of each registered app's per-profile cache directory.
+     * Only /data/adb/privacykit/<package>/<profile>/cache is touched; profile data
+     * outside cache is preserved. Disabled apps are included when supplied by the caller.
+     *
+     * @return number of cache directories processed
+     */
+    fun clearProfileCaches(packageNames: Collection<String>): Int {
+        packageNames.forEach(::requireValidPackage)
+        if (packageNames.isEmpty()) return 0
+
+        val commands = buildString {
+            append("set -eu; cleared=0; ")
+            packageNames.sorted().forEach { packageName ->
+                val appRoot = "/data/adb/privacykit/$packageName"
+                append("app_root=").append(quote(appRoot)).append("; ")
+                append("if [ -d \"\\$app_root\" ] && [ ! -L \"\\$app_root\" ]; then ")
+                append("for profile_dir in \"\\$app_root\"/*; do ")
+                append("[ -d \"\\$profile_dir\" ] && [ ! -L \"\\$profile_dir\" ] || continue; ")
+                append("cache_dir=\"\\$profile_dir/cache\"; ")
+                append("if [ -d \"\\$cache_dir\" ] && [ ! -L \"\\$cache_dir\" ]; then ")
+                append("find \"\\$cache_dir\" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +; ")
+                append("cleared=\\$((cleared + 1)); ")
+                append("fi; done; fi; ")
+            }
+            append("echo CACHE_DIRS_CLEARED=\\$cleared")
+        }
+        val output = runAsRoot(commands)
+        return output.lineSequence()
+            .mapNotNull { it.trim().removePrefix("CACHE_DIRS_CLEARED=").toIntOrNull() }
+            .lastOrNull()
+            ?: error("Could not read cache cleanup result: $output")
+    }
+
     fun switchAppsToProfile(packageNames: Collection<String>, profileId: Long) {
         packageNames.forEach(::requireValidPackage)
         if (packageNames.isEmpty()) return
@@ -71,7 +106,7 @@ class RootAppDataManager {
 
     private fun quote(value: String): String = "'${value.replace("'", "'\\''")}'"
 
-    private fun runAsRoot(script: String) {
+    private fun runAsRoot(script: String): String {
         val process = try {
             ProcessBuilder("su", "-mm", "-c", script).redirectErrorStream(true).start()
         } catch (error: IOException) {
