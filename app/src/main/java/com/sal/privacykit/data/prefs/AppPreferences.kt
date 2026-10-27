@@ -25,6 +25,8 @@ class AppPreferences(private val context: Context) {
         val CUSTOM_HOOKS_JSON = stringPreferencesKey("custom_hooks_json")
         val ACTIVE_PROFILE_GLOBAL = stringPreferencesKey("active_profile_global")
         val REGISTERED_APPS = stringPreferencesKey("registered_apps")
+        val STEP_COUNT_MIN = stringPreferencesKey("step_count_min")
+        val STEP_COUNT_MAX = stringPreferencesKey("step_count_max")
     }
 
     val themeMode: Flow<ThemeMode> = context.dataStore.data.map { prefs ->
@@ -105,6 +107,24 @@ class AppPreferences(private val context: Context) {
             }
         }.toString()
     
+
+    val stepCountMin: Flow<Long> = context.dataStore.data.map { prefs ->
+        prefs[Keys.STEP_COUNT_MIN]?.toLongOrNull() ?: 12000L
+    }
+
+    val stepCountMax: Flow<Long> = context.dataStore.data.map { prefs ->
+        prefs[Keys.STEP_COUNT_MAX]?.toLongOrNull() ?: 15000L
+    }
+
+    suspend fun setStepCountRange(min: Long, max: Long) {
+        require(min >= 0L) { "Minimum steps must be non-negative" }
+        require(max >= min) { "Maximum steps must be greater than or equal to minimum steps" }
+        require(max <= Int.MAX_VALUE.toLong()) { "Maximum steps is too large" }
+        context.dataStore.edit { prefs ->
+            prefs[Keys.STEP_COUNT_MIN] = min.toString()
+            prefs[Keys.STEP_COUNT_MAX] = max.toString()
+        }
+    }
 
     val hasSeenOnboarding: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[Keys.HAS_SEEN_ONBOARDING] ?: false
