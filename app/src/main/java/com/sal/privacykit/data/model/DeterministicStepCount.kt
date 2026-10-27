@@ -20,6 +20,7 @@ object DeterministicStepCount {
             seed = (seed xor (byte.toLong() and 0xffL)) * 1099511628211L
         }
         val width = max - min + 1L
+        require(width <= Int.MAX_VALUE.toLong()) { "Step-count range is too wide" }
         val offset = if (width == 1L) 0L else Random(seed).nextInt(width.toInt()).toLong()
         return min + offset
     }
