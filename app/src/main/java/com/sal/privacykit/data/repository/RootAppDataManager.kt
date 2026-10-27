@@ -58,16 +58,16 @@ class RootAppDataManager {
             packageNames.sorted().forEach { packageName ->
                 val appRoot = "/data/adb/privacykit/$packageName"
                 append("app_root=").append(quote(appRoot)).append("; ")
-                append("if [ -d \"\\$app_root\" ] && [ ! -L \"\\$app_root\" ]; then ")
-                append("for profile_dir in \"\\$app_root\"/*; do ")
-                append("[ -d \"\\$profile_dir\" ] && [ ! -L \"\\$profile_dir\" ] || continue; ")
-                append("cache_dir=\"\\$profile_dir/cache\"; ")
-                append("if [ -d \"\\$cache_dir\" ] && [ ! -L \"\\$cache_dir\" ]; then ")
-                append("find \"\\$cache_dir\" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +; ")
-                append("cleared=\\$((cleared + 1)); ")
+                append("if [ -d \"\$app_root\" ] && [ ! -L \"\$app_root\" ]; then ")
+                append("for profile_dir in \"\$app_root\"/*; do ")
+                append("[ -d \"\$profile_dir\" ] && [ ! -L \"\$profile_dir\" ] || continue; ")
+                append("cache_dir=\"\$profile_dir/cache\"; ")
+                append("if [ -d \"\$cache_dir\" ] && [ ! -L \"\$cache_dir\" ]; then ")
+                append("find \"\$cache_dir\" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +; ")
+                append("cleared=\$((cleared + 1)); ")
                 append("fi; done; fi; ")
             }
-            append("echo CACHE_DIRS_CLEARED=\\$cleared")
+            append("echo CACHE_DIRS_CLEARED=\$cleared")
         }
         val output = runAsRoot(commands)
         return output.lineSequence()
@@ -117,5 +117,6 @@ class RootAppDataManager {
         check(exitCode == 0) {
             "Root app-data operation failed (exit $exitCode): $output"
         }
+        return output
     }
 }
