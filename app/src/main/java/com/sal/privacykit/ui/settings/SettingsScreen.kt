@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -29,11 +31,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.sal.privacykit.PrivacyKitApplication
+import com.sal.privacykit.data.model.DeterministicStepCount
 import com.sal.privacykit.ui.components.SectionHeader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -41,6 +45,7 @@ import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -68,6 +73,23 @@ fun SettingsScreen(
     var showAbout by remember { mutableStateOf(false) }
     var showClearCacheConfirmation by remember { mutableStateOf(false) }
     var clearingCaches by remember { mutableStateOf(false) }
+    var showStepRangeDialog by remember { mutableStateOf(false) }
+    var stepMinInput by remember { mutableStateOf("12000") }
+    var stepMaxInput by remember { mutableStateOf("15000") }
+    val stepCountMin by container.appPreferences.stepCountMin.collectAsState(initial = 12000L)
+    val stepCountMax by container.appPreferences.stepCountMax.collectAsState(initial = 15000L)
+    val activeProfileId by container.appPreferences.activeProfileGlobalId.collectAsState(initial = null)
+
+    LaunchedEffect(stepCountMin, stepCountMax, showStepRangeDialog) {
+        if (showStepRangeDialog) {
+            stepMinInput = stepCountMin.toString()
+            stepMaxInput = stepCountMax.toString()
+        }
+    }
+
+    val syntheticStepsPreview = activeProfileId?.let { profileId ->
+        runCatching { DeterministicStepCount.forProfileDate(profileId, LocalDate.now(), stepCountMin, stepCountMax) }.getOrNull()
+    }
 
     fun showMessage(message: String) {
         scope.launch { snackbarHostState.showSnackbar(message) }
@@ -180,6 +202,52 @@ fun SettingsScreen(
         )
     }
 
+    OverlayDialog(
+        show = showStepRangeDialog,
+        onDismissRequest = { showStepRangeDialog = false },
+        title = "Synthetic step-count test range",
+        summary = "These values are used only to preview deterministic synthetic test data. They do not modify Health Connect records or real aggregation results.",
+    ) {
+        TextField(
+            value = stepMinInput,
+            onValueChange = { stepMinInput = it.filter(Char::isDigit).take(10) },
+            label = "Minimum steps",
+            modifier = Modifier.fillMaxWidth(),
+        )
+        TextField(
+            value = stepMaxInput,
+            onValueChange = { stepMaxInput = it.filter(Char::isDigit).take(10) },
+            label = "Maximum steps",
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        )
+        TextButton(
+            text = "Save range",
+            onClick = {
+                val min = stepMinInput.toLongOrNull()
+                val max = stepMaxInput.toLongOrNull()
+                if (min == null || max == null || min < 0L || max < min || max > Int.MAX_VALUE.toLong()) {
+                    showMessage("Enter a valid range from 0 to ${Int.MAX_VALUE}, with minimum <= maximum")
+                } else {
+                    scope.launch {
+                        runCatching { container.appPreferences.setStepCountRange(min, max) }
+                            .onSuccess {
+                                showStepRangeDialog = false
+                                showMessage("Synthetic step-count range saved")
+                            }
+                            .onFailure { showMessage(it.userMessage()) }
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            colors = ButtonDefaults.textButtonColorsPrimary(),
+        )
+        TextButton(
+            text = "Cancel",
+            onClick = { showStepRangeDialog = false },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        )
+    }
+
     Scaffold(
         topBar = { SmallTopAppBar(title = "Settings") },
         snackbarHost = { SnackbarHost(state = snackbarHostState) },
@@ -203,6 +271,20 @@ fun SettingsScreen(
                 SettingsRow(
                     SettingsEntry(Icons.Filled.FileUpload, "Export Profiles", "Export profiles to file") {
                         exportProfilesLauncher.launch("privacy_kit_lite_profiles.json")
+                    },
+                )
+            }
+            item { SectionHeader("Health Connect testing") }
+            item {
+                SettingsRow(
+                    SettingsEntry(
+                        Icons.Filled.Info,
+                        "Synthetic step-count range",
+                        "Min $stepCountMin · Max $stepCountMax · Today's preview: ${syntheticStepsPreview?.toString() ?: "select a profile"}",
+                    ) {
+                        stepMinInput = stepCountMin.toString()
+                        stepMaxInput = stepCountMax.toString()
+                        showStepRangeDialog = true
                     },
                 )
             }
