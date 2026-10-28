@@ -1,5 +1,6 @@
 package com.sal.privacykit.data.repository
 
+import android.util.Log
 import com.sal.privacykit.data.db.AppDatabase
 import com.sal.privacykit.data.db.ProfileEntity
 import com.sal.privacykit.data.model.DeviceTemplateCatalog
@@ -106,8 +107,13 @@ class ProfileRepository(
     private val appPreferences: AppPreferences,
     private val rootAppDataManager: RootAppDataManager,
     private val profileApplier: ProfileApplier,
+    private val healthConnectStepDataManager: HealthConnectStepDataManager,
 ) {
     private val dao = database.profileDao()
+
+    companion object {
+        private const val TAG = "ProfileRepository"
+    }
 
     fun observeAll(): Flow<List<Profile>> = dao.observeAll().map { list -> list.map { it.toDomain() } }
 
@@ -240,9 +246,28 @@ class ProfileRepository(
     }
 
     suspend fun setActiveProfile(profile: Profile) {
+        val previousProfileId = appPreferences.activeProfileGlobalId.first()
         profileApplier.applyProfile(profile.id)
         appPreferences.setActiveProfileGlobal(profile.id)
+
+        if (previousProfileId != profile.id) {
+            runCatching {
+                healthConnectStepDataManager.replaceRecentSteps(profile.id)
+            }.onFailure { error ->
+                // Health Connect failures must not undo a successful profile switch.
+                Log.e(TAG, "Failed to replace recent Health Connect step records", error)
+            }
+        }
         syncExport()
+    }
+
+    suspend fun refreshHealthConnectForActiveProfile() {
+        val profileId = appPreferences.activeProfileGlobalId.first() ?: return
+        runCatching {
+            healthConnectStepDataManager.replaceRecentSteps(profileId)
+        }.onFailure { error ->
+            Log.e(TAG, "Failed to initialize Health Connect step records", error)
+        }
     }
 
     suspend fun provisionAppDataForPackage(packageName: String) {
