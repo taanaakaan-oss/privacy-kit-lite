@@ -4,6 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContract
+import android.util.Log
+import androidx.lifecycle.lifecycleScope
+import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.StepsRecord
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
@@ -18,12 +26,39 @@ import com.sal.privacykit.ui.theme.PrivacyKitTheme
 import top.yukonga.miuix.kmp.basic.Surface
 
 class MainActivity : ComponentActivity() {
+    private val requestHealthConnectPermission = registerForActivityResult(
+        PermissionController.createRequestPermissionResultContract(),
+    ) { grantedPermissions ->
+        val writePermission = HealthPermission.getWritePermission(StepsRecord::class)
+        if (writePermission in grantedPermissions) {
+            lifecycleScope.launch {
+                (application as PrivacyKitApplication).container.profileRepository
+                    .refreshHealthConnectForActiveProfile()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         val container = (application as PrivacyKitApplication).container
+
+        lifecycleScope.launch {
+            runCatching {
+                if (HealthConnectClient.getSdkStatus(this@MainActivity) != HealthConnectClient.SDK_AVAILABLE) {
+                    return@launch
+                }
+                val client = HealthConnectClient.getOrCreate(this@MainActivity)
+                val writePermission = HealthPermission.getWritePermission(StepsRecord::class)
+                if (writePermission !in client.permissionController.getGrantedPermissions()) {
+                    requestHealthConnectPermission.launch(setOf(writePermission))
+                }
+            }.onFailure { error ->
+                Log.w("MainActivity", "Unable to check Health Connect write permission", error)
+            }
+        }
 
         setContent {
             CompositionLocalProvider(LocalAppContainer provides container) {
