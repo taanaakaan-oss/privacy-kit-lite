@@ -1,1 +1,2 @@
 com.sal.privacykit.xposed.PrivacyKitHook
+com.sal.privacykit.xposed.HealthConnectStepHook
