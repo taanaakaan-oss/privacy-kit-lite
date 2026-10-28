@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import android.util.Log
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.whenStarted
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
@@ -45,17 +46,19 @@ class MainActivity : ComponentActivity() {
         val container = (application as PrivacyKitApplication).container
 
         lifecycleScope.launch {
-            runCatching {
-                if (HealthConnectClient.getSdkStatus(this@MainActivity) != HealthConnectClient.SDK_AVAILABLE) {
-                    return@launch
+            lifecycle.whenStarted {
+                runCatching {
+                    if (HealthConnectClient.getSdkStatus(this@MainActivity) != HealthConnectClient.SDK_AVAILABLE) {
+                        return@whenStarted
+                    }
+                    val client = HealthConnectClient.getOrCreate(this@MainActivity)
+                    val writePermission = HealthPermission.getWritePermission(StepsRecord::class)
+                    if (writePermission !in client.permissionController.getGrantedPermissions()) {
+                        requestHealthConnectPermission.launch(setOf(writePermission))
+                    }
+                }.onFailure { error ->
+                    Log.w("MainActivity", "Unable to check Health Connect write permission", error)
                 }
-                val client = HealthConnectClient.getOrCreate(this@MainActivity)
-                val writePermission = HealthPermission.getWritePermission(StepsRecord::class)
-                if (writePermission !in client.permissionController.getGrantedPermissions()) {
-                    requestHealthConnectPermission.launch(setOf(writePermission))
-                }
-            }.onFailure { error ->
-                Log.w("MainActivity", "Unable to check Health Connect write permission", error)
             }
         }
 
