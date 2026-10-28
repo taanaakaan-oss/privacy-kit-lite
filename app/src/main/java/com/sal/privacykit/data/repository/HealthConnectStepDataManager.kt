@@ -44,11 +44,6 @@ class HealthConnectStepDataManager(
         }
 
         val now = Instant.now()
-        val deleteStart = now.minus(DELETE_WINDOW)
-        client.deleteRecords<StepsRecord>(
-            timeRangeFilter = TimeRangeFilter.between(deleteStart, now),
-        )
-
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now(zone)
         val yesterday = today.minusDays(1)
@@ -65,6 +60,11 @@ class HealthConnectStepDataManager(
             createRecord(profileId, yesterday, yesterdayStart, yesterdayEnd, zone, minSteps, maxSteps),
         )
 
+        // Build/validate the replacement records before deleting existing data.
+        val deleteStart = now.minus(DELETE_WINDOW)
+        client.deleteRecords<StepsRecord>(
+            timeRangeFilter = TimeRangeFilter.between(deleteStart, now),
+        )
         client.insertRecords(records)
         Log.i(TAG, "Replaced recent step records for profile=$profileId, dates=$yesterday,$today")
     }
