@@ -3,10 +3,7 @@ package com.sal.privacykit.data.model
 import java.time.LocalDate
 import java.util.Random
 
-/**
- * Produces stable synthetic step totals for UI and integration testing only.
- * This helper does not write to Health Connect or alter real aggregation results.
- */
+/** Produces stable synthetic step totals from a profile ID and local calendar date. */
 object DeterministicStepCount {
     fun forProfileDate(profileId: Long, date: LocalDate, min: Long = 12000L, max: Long = 15000L): Long {
         require(profileId >= 0L) { "Profile ID must be non-negative" }
