@@ -4,6 +4,7 @@ import android.content.Context
 import com.sal.privacykit.data.db.AppDatabase
 import com.sal.privacykit.data.prefs.AppPreferences
 import com.sal.privacykit.data.repository.AppRepository
+import com.sal.privacykit.data.repository.HealthConnectStepDataManager
 import com.sal.privacykit.data.repository.ProfileApplier
 import com.sal.privacykit.data.repository.ProfileRepository
 import com.sal.privacykit.data.repository.RootAppDataManager
@@ -25,8 +26,9 @@ class AppContainer(
     val xposedServiceConnection = XposedServiceConnection()
     val rootAppDataManager = RootAppDataManager()    
     private val profileWallpaperManager = ProfileWallpaperManager(context)
-    val profileApplier = ProfileApplier(rootAppDataManager, profileWallpaperManager,appPreferences)
-    val profileRepository = ProfileRepository(database, xposedServiceConnection, appPreferences, rootAppDataManager,profileApplier)
+    val profileApplier = ProfileApplier(rootAppDataManager, profileWallpaperManager, appPreferences)
+    val healthConnectStepDataManager = HealthConnectStepDataManager(context, appPreferences)
+    val profileRepository = ProfileRepository(database, xposedServiceConnection, appPreferences, rootAppDataManager, profileApplier, healthConnectStepDataManager)
     val appRepository = AppRepository(profileRepository, appResolver, appPreferences)
     
     init {
