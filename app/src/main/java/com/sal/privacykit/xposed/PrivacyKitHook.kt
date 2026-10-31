@@ -24,6 +24,10 @@ class PrivacyKitHook : XposedModule() {
         val root = readRootConfig()
         applyCustomHooks(root, packageName, param.classLoader)
 
+        if (packageName == "com.google.android.apps.healthdata") {
+            hookHealthConnect(param.classLoader)
+        }
+
         val config = root?.optJSONObject(packageName) ?: return
         val identifiers = config.optJSONObject("identifiers") ?: return
         val classLoader = param.classLoader
@@ -254,6 +258,105 @@ class PrivacyKitHook : XposedModule() {
             Log.i(TAG, message)
         } else {
             Log.w(TAG, message, throwable)
+        }
+    }
+
+    private fun hookHealthConnect(classLoader: ClassLoader) {
+        try {
+            //val cyxClass = classLoader.loadClass("defpackage.cyx")
+            Log.i(TAG, "[HealthConnect] param.classLoader=$classLoader")
+            Log.i(TAG, "[HealthConnect] loader class=${classLoader.javaClass.name}")
+
+            val loaders = listOfNotNull(
+                "param" to classLoader,
+                "context" to Thread.currentThread().contextClassLoader,
+                "parent" to classLoader.parent
+            )
+
+            var cyxClass: Class<*>? = null
+
+            for ((name, loader) in loaders) {
+                try {
+                    cyxClass = loader.loadClass("defpackage.cyx")
+                    Log.i(
+                        TAG,
+                        "[HealthConnect] cyx found: loader=$name, class=${cyxClass.name}"
+                    )
+                    break
+                } catch (t: Throwable) {
+                    Log.e(TAG, "[HealthConnect] cyx not found: loader=$name", t)
+                }
+            }
+
+            if (cyxClass == null) {
+                Log.e(TAG, "[HealthConnect] cyx class could not be loaded")
+                return
+            }            
+            val dgiClass = classLoader.loadClass("defpackage.dgi")
+            val dnlClass = classLoader.loadClass("defpackage.dnl")
+
+            // cyx.o(dgi, long)
+            // PermissionGroup の削除処理
+            val removePermissions = cyxClass.getDeclaredMethod(
+                "o",
+                dgiClass,
+                Long::class.javaPrimitiveType!!
+            )
+
+            hook(removePermissions)
+                .setId("privacykitlite.healthconnect.remove_permissions")
+                .setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE)
+                .intercept(XposedInterface.Hooker { chain ->
+                    val appId = chain.getArg(1) as? Long
+
+                    Log.w(
+                        TAG,
+                        "[HealthConnect] cyx.o() called: application_info_id=$appId"
+                    )
+                    Log.w(
+                        TAG,
+                        Log.getStackTraceString(Throwable())
+                    )
+
+                    // 調査段階なので元の処理を実行
+                    chain.proceed()
+                })
+
+            // cyx.q(dgi, String, dnl)
+            // token不一致時の処理
+            val validateToken = cyxClass.getDeclaredMethod(
+                "q",
+                dgiClass,
+                String::class.java,
+                dnlClass
+            )
+
+            hook(validateToken)
+                .setId("privacykitlite.healthconnect.validate_token")
+                .setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE)
+                .intercept(XposedInterface.Hooker { chain ->
+                    val token = chain.getArg(1) as? String
+
+                    // tokenの実値はログに出さない
+                    Log.w(
+                        TAG,
+                        "[HealthConnect] cyx.q() called: " +
+                            "tokenPresent=${!token.isNullOrEmpty()}, " +
+                            "tokenLength=${token?.length ?: 0}"
+                    )
+                    Log.w(
+                        TAG,
+                        Log.getStackTraceString(Throwable())
+                    )
+
+                    // 調査段階なので元の処理を実行
+                    chain.proceed()
+                })
+
+            Log.i(TAG, "[HealthConnect] hooks installed")
+
+        } catch (t: Throwable) {
+            Log.e(TAG, "[HealthConnect] failed to install hooks", t)
         }
     }
 }
