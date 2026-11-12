@@ -16,7 +16,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.sal.privacykit.lite"
+        applicationId = "jp.mack.privacykit"
         minSdk = 26
         targetSdk = 37
         versionCode = 4
