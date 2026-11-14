@@ -249,7 +249,7 @@ class ProfileRepository(
         val previousProfileId = appPreferences.activeProfileGlobalId.first()
         profileApplier.applyProfile(profile.id)
         appPreferences.setActiveProfileGlobal(profile.id)
-
+        /*
         if (previousProfileId != profile.id) {
             runCatching {
                 healthConnectStepDataManager.replaceRecentSteps(profile.id)
@@ -258,6 +258,7 @@ class ProfileRepository(
                 Log.e(TAG, "Failed to replace recent Health Connect step records", error)
             }
         }
+        */
         syncExport()
     }
 

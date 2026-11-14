@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Surface
 
 class MainActivity : ComponentActivity() {
+    /*
     private val requestHealthConnectPermission = registerForActivityResult(
         PermissionController.createRequestPermissionResultContract(),
     ) { grantedPermissions ->
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    */
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -45,6 +47,7 @@ class MainActivity : ComponentActivity() {
 
         val container = (application as PrivacyKitApplication).container
 
+        /*
         lifecycleScope.launch {
             lifecycle.whenStarted {
                 runCatching {
@@ -61,6 +64,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        */
 
         setContent {
             CompositionLocalProvider(LocalAppContainer provides container) {
