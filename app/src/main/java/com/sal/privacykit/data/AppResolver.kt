@@ -27,17 +27,30 @@ class AppResolver(private val context: Context) {
         }
     }
 
-    /** Lists all launchable apps on the device (excluding this app itself), for the app picker. */
+    /** Lists launchable apps and explicitly included system apps. */
     fun listLaunchableApps(): List<AppInfo> {
         val pm = context.packageManager
-        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-        return pm.queryIntentActivities(intent, 0)
-            .asSequence()
+        val intent = Intent(Intent.ACTION_MAIN)
+            .addCategory(Intent.CATEGORY_LAUNCHER)
+
+        val packageNames = pm.queryIntentActivities(intent, 0)
             .map { it.activityInfo.packageName }
             .filter { it != context.packageName }
-            .distinct()
+            .toMutableSet()
+
+        // Add Health Connect even if it has no launcher activity.
+        val healthConnectPackage = "com.google.android.apps.healthdata"
+
+        val isHealthConnectInstalled = runCatching {
+            pm.getApplicationInfo(healthConnectPackage, 0)
+        }.isSuccess
+
+        if (isHealthConnectInstalled) {
+            packageNames.add(healthConnectPackage)
+        }
+
+        return packageNames
             .map { resolve(it) }
             .sortedBy { it.name.lowercase() }
-            .toList()
     }
 }
