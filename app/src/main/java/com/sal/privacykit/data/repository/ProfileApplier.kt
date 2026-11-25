@@ -13,6 +13,6 @@ class ProfileApplier (
         val packages = appPreferences.registeredApps.first().keys
 
         rootAppDataManager.switchAppsToProfile(packages, profileId)
-        profileWallpaperManager.apply(profileId)
+        //profileWallpaperManager.apply(profileId)
     }
 }

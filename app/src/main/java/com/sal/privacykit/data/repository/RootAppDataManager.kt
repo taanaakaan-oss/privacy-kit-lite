@@ -23,7 +23,19 @@ class RootAppDataManager {
             append("exit 1; ")
             append("fi; ")
 
-            append("owner=$(stat -c '%u:%g' \"\$base\"); ")
+            append(
+                "app_uid=$(dumpsys package ${quote(packageName)} " +
+                    "| sed -n 's/^[[:space:]]*userId=\\([0-9][0-9]*\\).*/\\1/p' " +
+                    "| head -n 1); "
+            )
+            append(
+                "case \"\$app_uid\" in " +
+                    "''|*[!0-9]*) " +
+                    "echo 'ERROR: Could not determine app UID for ${packageName}' >&2; " +
+                    "exit 1;; " +
+                "esac; "
+            )
+            append("owner=\"\$app_uid:\$app_uid\"; ")
             append("echo \"[provision] owner=\$owner\"; ")
             
             val packageRoot = "/data/adb/privacykit/$packageName"
@@ -87,6 +99,25 @@ class RootAppDataManager {
                 val target = "/data/user/0/$packageName"
                 val source = profileDataPath(packageName, profileId)
                 append("umount ").append(quote(target)).append(" 2>/dev/null || true; ")
+                append(
+                    "app_uid=$(dumpsys package ${quote(packageName)} " +
+                        "| sed -n 's/^[[:space:]]*userId=\\([0-9][0-9]*\\).*/\\1/p' " +
+                        "| head -n 1); "
+                )
+                append(
+                    "case \"\$app_uid\" in " +
+                        "''|*[!0-9]*) " +
+                        "echo 'ERROR: Could not determine app UID' >&2; " +
+                        "exit 1;; " +
+                    "esac; "
+                )
+                append("expected_owner=\"\$app_uid:\$app_uid\"; ")
+                append("actual_owner=$(stat -c '%u:%g' ${quote(source)}); ")
+                append(
+                    "if [ \"\$actual_owner\" != \"\$expected_owner\" ]; then " +
+                        "chown -R \"\$expected_owner\" ${quote(source)}; " +
+                    "fi; "
+                )
                 append("mount --bind ").append(quote(source)).append(" ").append(quote(target)).append("; ")
                 append("restorecon -R ").append(quote(target)).append("; ")
             }
