@@ -8,6 +8,7 @@ object IdentifierValueGenerator {
         return when (key) {
             "android_id" -> hex(random, 16)
             "advertising_id" -> uuid(random)
+            "app_set_id" -> uuid(random)
             "build_model" -> randomDeviceModel(random)
             "build_brand", "build_manufacturer" -> randomBrand(random)
             "build_device" -> "device_${hex(random, 3)}"

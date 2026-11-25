@@ -79,21 +79,42 @@ private fun defaultValues(
     return generated + templateValues(deviceTemplateId, customDeviceName, customDeviceManufacturer)
 }
 
-private fun ProfileEntity.toDomain(): Profile = Profile(
-    id = id,
-    name = name,
-    deviceTemplateId = deviceTemplateId,
-    profileMode = runCatching { ProfileMode.valueOf(profileMode) }.getOrDefault(ProfileMode.ISOLATED),
-    identifierRules = decodeRules(identifierRules).ifEmpty { defaultRules() },
-    identifierValues = decodeValues(identifierValues),
-    createdAt = createdAt,
-    customDeviceName = customDeviceName,
-    customDeviceManufacturer = customDeviceManufacturer,
-    skipLaunchConfirmation = skipLaunchConfirmation,
-    archived = archived,
-    tagColor = tagColor?.let { runCatching { ProfileTagColor.valueOf(it) }.getOrNull() },
-    notes = notes,
-)
+private fun ProfileEntity.toDomain(): Profile {
+    // 新しく追加された識別子も既存プロファイルに補完する
+    val rules = defaultRules() + decodeRules(identifierRules)
+
+    val values = decodeValues(identifierValues).toMutableMap()
+
+    // STATIC の値が未設定なら、プロファイルIDを使って生成する
+    rules.forEach { (key, rule) ->
+        if (rule == IdentifierRuleType.STATIC && values[key].isNullOrBlank()) {
+            values[key] = IdentifierValueGenerator.generate(
+                key,
+                IdentifierValueGenerator.seedFor(id, key),
+            )
+        }
+    }
+
+    return Profile(
+        id = id,
+        name = name,
+        deviceTemplateId = deviceTemplateId,
+        profileMode = runCatching {
+            ProfileMode.valueOf(profileMode)
+        }.getOrDefault(ProfileMode.ISOLATED),
+        identifierRules = rules,
+        identifierValues = values,
+        createdAt = createdAt,
+        customDeviceName = customDeviceName,
+        customDeviceManufacturer = customDeviceManufacturer,
+        skipLaunchConfirmation = skipLaunchConfirmation,
+        archived = archived,
+        tagColor = tagColor?.let {
+            runCatching { ProfileTagColor.valueOf(it) }.getOrNull()
+        },
+        notes = notes,
+    )
+}
 
 fun selectActiveOrFallback(profiles: List<Profile>, activeId: Long?): Profile? {
     val candidates = profiles.filterNot { it.archived }
