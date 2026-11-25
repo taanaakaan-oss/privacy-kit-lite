@@ -34,7 +34,7 @@ class PrivacyKitHook : XposedModule() {
 
         hookAdvertisingIdBinder(identifiers)
         hookAndroidId(identifiers)
-
+        hookAppSetId(identifiers, classLoader)
         hookBuildField(identifiers, "build_model", "MODEL")
         hookBuildField(identifiers, "build_brand", "BRAND")
         hookBuildField(identifiers, "build_manufacturer", "MANUFACTURER")
@@ -54,6 +54,27 @@ class PrivacyKitHook : XposedModule() {
             )
             method to XposedInterface.Hooker { chain ->
                 if (chain.getArg(1) == Settings.Secure.ANDROID_ID) spoofed else chain.proceed()
+            }
+        }
+    }
+    
+    private fun hookAppSetId(
+        identifiers: JSONObject,
+        classLoader: ClassLoader,
+    ) {
+        hookMethod(
+            identifiers,
+            "app_set_id",
+            "AppSetIdInfo.getId",
+        ) { spoofed ->
+            val clazz = Class.forName(
+                "com.google.android.gms.appset.AppSetIdInfo",
+                false,
+                classLoader,
+            )
+
+            clazz.getMethod("getId") to XposedInterface.Hooker {
+                spoofed
             }
         }
     }

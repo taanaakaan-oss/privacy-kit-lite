@@ -32,6 +32,12 @@ object IdentifierCatalog {
             ),
         ),
         IdentifierGroup(
+            title = "App Set ID",
+            items = listOf(
+                IdentifierItem("app_set_id", "App Set ID", IdentifierRuleType.STATIC),
+            ),
+        ),               
+        IdentifierGroup(
             title = "Build / Device Identity",
             items = listOf(
                 IdentifierItem("build_model", "Build Model", IdentifierRuleType.STATIC),
